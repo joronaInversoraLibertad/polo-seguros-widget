@@ -17,6 +17,7 @@ function App() {
   const [filtroVigentes, setFiltroVigentes] = useState(true);
   const [filtroNoVigentes, setFiltroNoVigentes] = useState(true);
   const [loadingButtons, setLoadingButtons] = useState({});
+  const [noResults, setNoResults] = useState(false);
 
   // Aplicar filtros cuando cambien los datos o los filtros
   useEffect(() => {
@@ -55,6 +56,7 @@ function App() {
     setPolizasData([]);
     setPolizasFiltered([]);
     setResultado('');
+    setNoResults(false);
 
     try {
       const response = await fetch(`${API_BASE}/polizas-buscar?dni=${dni.trim()}`, {
@@ -119,6 +121,9 @@ function App() {
       });
 
       setPolizasData(polizasArray);
+      if (polizasArray.length === 0) {
+        setNoResults(true);
+      }
     } catch (err) {
       setError('Error al cargar: ' + (err.message || 'Error desconocido'));
     } finally {
@@ -319,7 +324,7 @@ function App() {
       )}
 
       <div id="polizas-lista">
-        {!polizasData.length && !error && !loading && (
+        {!polizasData.length && !error && !loading && !noResults && (
           <p style={{ textAlign: 'center', color: '#666' }}>
             Ingrese un DNI o CUIT y haga clic en "Cargar pólizas" para comenzar.
           </p>
@@ -333,6 +338,23 @@ function App() {
           <p style={{ textAlign: 'center', color: '#666', marginBottom: '20px' }}>
             No hay pólizas que coincidan con los filtros seleccionados.
           </p>
+        )}
+
+        {noResults && !loading && (
+          <div>
+            <p style={{ textAlign: 'center', color: '#666', marginBottom: '20px' }}>
+              No se encontraron pólizas con este número de DNI/CUIT.
+            </p>
+            <div className="contacto-sin-polizas">
+              <p>
+                Si usted no encontró su póliza complete nuestro{' '}
+                <a href="https://polobroker.com.ar/contacto/" target="_blank" rel="noopener noreferrer">
+                  formulario de contacto
+                </a>{' '}
+                y lo ayudaremos.
+              </p>
+            </div>
+          </div>
         )}
 
         {polizasPagina.length > 0 && polizasPagina.map((poliza, idx) => {
