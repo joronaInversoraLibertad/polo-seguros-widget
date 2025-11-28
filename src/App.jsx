@@ -336,6 +336,7 @@ function App() {
         )}
 
         {polizasPagina.length > 0 && polizasPagina.map((poliza, idx) => {
+          console.log('Poliza data:', poliza);
           const badgeClass = poliza.estado === 'vigente' ? 'badge-vigente' : 'badge-vencida';
           const badgeTexto = poliza.estado === 'vigente' ? 'Vigente' : 'No Vigente';
 
@@ -362,16 +363,16 @@ function App() {
                 <p style={{ margin: '5px 0', fontSize: '14px' }}>
                   <strong>Tipo:</strong> {poliza.tipo || '-'}
                 </p>
-                {poliza.cobertura && poliza.cobertura.plan && (
+                {poliza.cobertura && poliza.cobertura.plan && poliza.cobertura.plan !== 0 && poliza.cobertura.plan !== '0' && String(poliza.cobertura.plan).trim() !== '' && (
                   <p style={{ margin: '5px 0', fontSize: '14px' }}>
                     <strong>Plan:</strong> {poliza.cobertura.plan}
                   </p>
                 )}
-                {poliza.certificateNumber && (
+                {(poliza.certificateNumber !== null && poliza.certificateNumber !== undefined && poliza.certificateNumber !== '' && poliza.certificateNumber !== 0 && poliza.certificateNumber !== '0') ? (
                   <p style={{ margin: '5px 0', fontSize: '14px' }}>
                     <strong>Número de certificado:</strong> {poliza.certificateNumber}
                   </p>
-                )}
+                ) : null}
                 <p style={{ margin: '5px 0', fontSize: '14px' }}>
                   <strong>Descripción:</strong> {poliza.descripcion || '-'}
                 </p>

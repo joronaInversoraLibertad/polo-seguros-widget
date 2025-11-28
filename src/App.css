@@ -240,7 +240,6 @@ h2 {
 
 .filtros-estado {
   display: flex;
-  flex-direction: column;
   gap: 12px;
   align-items: flex-end;
 }
@@ -253,11 +252,14 @@ h2 {
   color: #333;
   margin: 0;
   padding: 4px 0;
+  min-width: 120px;
+  justify-content: flex-end;
 }
 
 .filtros-estado input[type="checkbox"] {
   width: 20px;
   height: 20px;
+  min-width: 20px;
   margin-right: 8px;
   cursor: pointer;
   accent-color: rgb(163, 203, 100);
@@ -267,6 +269,7 @@ h2 {
   border: 2px solid rgb(163, 203, 100);
   border-radius: 3px;
   position: relative;
+  flex-shrink: 0;
 }
 
 .filtros-estado input[type="checkbox"]:checked {
