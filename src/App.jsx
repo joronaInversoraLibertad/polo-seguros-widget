@@ -277,7 +277,6 @@ function App() {
 
   return (
     <div id="polizas-container">
-      <h2>Mis Pólizas</h2>
 
       <div className="controls">
         <label htmlFor="dni">DNI/CUIT:</label>
@@ -358,7 +357,6 @@ function App() {
         )}
 
         {polizasPagina.length > 0 && polizasPagina.map((poliza, idx) => {
-          console.log('Poliza data:', poliza);
           const badgeClass = poliza.estado === 'vigente' ? 'badge-vigente' : 'badge-vencida';
           const badgeTexto = poliza.estado === 'vigente' ? 'Vigente' : 'No Vigente';
 
