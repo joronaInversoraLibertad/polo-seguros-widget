@@ -49,6 +49,7 @@ h2 {
   background: white;
   border-radius: 6px;
   border-left: 4px solid #a3cb64;
+  justify-items: center;
 }
 
 .poliza-botones {
