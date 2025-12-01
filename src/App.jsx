@@ -9,12 +9,12 @@ const POLIZAS_POR_PAGINA = 10;
 // Componente de Sección de Escritorio
 function EscritorioSection() {
   return (
-    <div id="escritorio-container">
+      <div id="escritorio-container">
       <div className="escritorio-content">
-        <h1 className="escritorio-title">Escritorio</h1>
+        <h1 className="section-title escritorio-title">Escritorio</h1>
         
-        <div className="escritorio-text">
-          <p className="escritorio-intro">
+        <div className="section-text escritorio-text">
+          <p className="section-text-intro escritorio-intro">
             Este es tu espacio personal en Polo Broker
           </p>
           <p>
@@ -34,11 +34,11 @@ function SiniestrosSection() {
   };
 
   return (
-    <div id="siniestros-container">
+      <div id="siniestros-container">
       <div className="siniestros-content">
-        <h1 className="siniestros-title">Siniestros</h1>
+        <h1 className="section-title siniestros-title">Siniestros</h1>
         
-        <div className="siniestros-text">
+        <div className="section-text siniestros-text">
           <p>
             En Polo Broker te acompañamos en cada paso. Puedes ingresar y ver el formulario que necesitas para registrar tu siniestro, puedes comenzar completándolo, con la información de tu siniestro y nuestro equipo se pondrá en contacto para brindarte la asistencia necesaria y acompañarte en el proceso.
           </p>
@@ -330,9 +330,9 @@ function PolizasSection() {
 
   return (
     <div id="polizas-container">
-      <h1 className="polizas-title">Mis Pólizas</h1>
+      <h1 className="section-title polizas-title">Mis Pólizas</h1>
       
-      <div className="polizas-text">
+      <div className="section-text polizas-text">
         <p>
           En este sector podés ver tus pólizas y descargar los documentos.
         </p>
