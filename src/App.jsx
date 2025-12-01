@@ -6,7 +6,41 @@ const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 
 const POLIZAS_POR_PAGINA = 10;
 
-function App() {
+// Componente de Sección de Siniestros
+function SiniestrosSection() {
+  const handleFormularioClick = () => {
+    // URL del formulario de siniestros - ajustar según corresponda
+    const formularioUrl = 'https://forms.zoho.com/polobroker1/form/Siniestro';
+    window.open(formularioUrl, '_blank');
+  };
+
+  return (
+    <div id="siniestros-container">
+      <div className="siniestros-content">
+        <h1 className="siniestros-title">Siniestros</h1>
+        
+        <div className="siniestros-text">
+          <p>
+            En Polo Broker te acompañamos en cada paso. Puedes ingresar y ver el formulario que necesitas para registrar tu siniestro, puedes comenzar completándolo, con la información de tu siniestro y nuestro equipo se pondrá en contacto para brindarte la asistencia necesaria y acompañarte en el proceso.
+          </p>
+          <p>
+            Tu denuncia será analizada a la brevedad para ofrecerte una respuesta personalizada y resolver tu situación con la mayor rapidez posible.
+          </p>
+        </div>
+        
+        <button 
+          className="btn-siniestro"
+          onClick={handleFormularioClick}
+        >
+          FORMULARIO DE SINIESTRO
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Componente de Sección de Pólizas (código actual refactorizado)
+function PolizasSection() {
   const [dni, setDni] = useState('');
   const [loading, setLoading] = useState(false);
   const [polizasData, setPolizasData] = useState([]);
@@ -440,6 +474,21 @@ function App() {
       )}
     </div>
   );
+}
+
+// Componente principal App
+function App() {
+  // Detectar sección desde query parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const section = urlParams.get('section') || 'polizas';
+
+  // Renderizar según la sección
+  if (section === 'siniestros') {
+    return <SiniestrosSection />;
+  }
+
+  // Por defecto: mostrar pólizas
+  return <PolizasSection />;
 }
 
 export default App;

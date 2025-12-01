@@ -296,3 +296,96 @@ body {
     margin: 20px auto;
   }
 }
+
+/* Estilos para Sección de Siniestros */
+#siniestros-container {
+  padding: 40px 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  min-height: 600px;
+}
+
+.siniestros-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.siniestros-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #0073aa;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.siniestros-text {
+  max-width: 700px;
+  margin-bottom: 40px;
+  text-align: left;
+}
+
+.siniestros-text p {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.siniestros-text p:last-child {
+  margin-bottom: 0;
+}
+
+.btn-siniestro {
+  padding: 16px 40px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  background: #a3cb64;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 6px rgba(163, 203, 100, 0.3);
+}
+
+.btn-siniestro:hover {
+  background: #8fb850;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(163, 203, 100, 0.4);
+}
+
+.btn-siniestro:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(163, 203, 100, 0.3);
+}
+
+@media (max-width: 768px) {
+  #siniestros-container {
+    padding: 20px 15px;
+  }
+  
+  .siniestros-title {
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+  
+  .siniestros-text {
+    margin-bottom: 30px;
+  }
+  
+  .siniestros-text p {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  
+  .btn-siniestro {
+    padding: 14px 30px;
+    font-size: 16px;
+    width: 100%;
+    max-width: 300px;
+  }
+}
