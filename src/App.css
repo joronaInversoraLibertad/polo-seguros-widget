@@ -23,6 +23,19 @@ body {
   text-align: center;
 }
 
+.polizas-text {
+  max-width: 700px;
+  margin: 0 auto 30px auto;
+  text-align: left;
+}
+
+.polizas-text p {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #333;
+  margin-bottom: 0;
+}
+
 .poliza-card {
   padding: 20px;
   border: 2px solid #0073aa;
@@ -306,6 +319,15 @@ body {
   .polizas-title {
     font-size: 28px;
     margin-bottom: 20px;
+  }
+  
+  .polizas-text {
+    margin-bottom: 20px;
+  }
+  
+  .polizas-text p {
+    font-size: 15px;
+    line-height: 1.6;
   }
 }
 

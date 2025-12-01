@@ -331,6 +331,12 @@ function PolizasSection() {
   return (
     <div id="polizas-container">
       <h1 className="polizas-title">Mis Pólizas</h1>
+      
+      <div className="polizas-text">
+        <p>
+          En este sector podés ver tus pólizas y descargar los documentos.
+        </p>
+      </div>
 
       <div className="controls">
         <label htmlFor="dni">DNI/CUIT:</label>
@@ -379,7 +385,7 @@ function PolizasSection() {
       <div id="polizas-lista">
         {!polizasData.length && !error && !loading && !noResults && (
           <p style={{ textAlign: 'center', color: '#666' }}>
-            Ingrese un DNI o CUIT y haga clic en "Cargar pólizas" para comenzar.
+            Ingrese su DNI y haga clic en "Cargar pólizas" para comenzar.
           </p>
         )}
 
@@ -396,7 +402,7 @@ function PolizasSection() {
         {noResults && !loading && (
           <div>
             <p style={{ textAlign: 'center', color: '#666', marginBottom: '20px' }}>
-              No se encontraron pólizas con este número de DNI/CUIT.
+              No se encontraron pólizas con este número de DNI.
             </p>
             <div className="contacto-sin-polizas">
               <p>
