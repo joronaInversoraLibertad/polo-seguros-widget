@@ -330,6 +330,7 @@ function PolizasSection() {
 
   return (
     <div id="polizas-container">
+      <h1 className="polizas-title">Mis Pólizas</h1>
 
       <div className="controls">
         <label htmlFor="dni">DNI/CUIT:</label>
