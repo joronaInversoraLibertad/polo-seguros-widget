@@ -339,11 +339,11 @@ function PolizasSection() {
       </div>
 
       <div className="controls">
-        <label htmlFor="dni">DNI/CUIT:</label>
+        <label htmlFor="dni">DNI:</label>
         <input
           id="dni"
           type="text"
-          placeholder="Ingrese su DNI o CUIT"
+          placeholder="Ingrese su DNI"
           value={dni}
           onChange={(e) => setDni(e.target.value)}
           onKeyPress={handleKeyPress}
