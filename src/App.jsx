@@ -347,7 +347,7 @@ function App() {
             <div className="contacto-sin-polizas">
               <p>
                 Si usted no encontró su póliza complete nuestro{' '}
-                <a href="https://polobroker.com.ar/contacto/" target="_blank" rel="noopener noreferrer">
+                <a href="https://forms.zoho.com/polobroker1/form/Contacto" target="_blank" rel="noopener noreferrer">
                   formulario de contacto
                 </a>{' '}
                 y lo ayudaremos.
