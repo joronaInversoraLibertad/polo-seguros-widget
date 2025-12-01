@@ -6,10 +6,29 @@ const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 
 const POLIZAS_POR_PAGINA = 10;
 
+// Componente de Sección de Escritorio
+function EscritorioSection() {
+  return (
+    <div id="escritorio-container">
+      <div className="escritorio-content">
+        <h1 className="escritorio-title">Escritorio</h1>
+        
+        <div className="escritorio-text">
+          <p className="escritorio-intro">
+            Este es tu espacio personal en Polo Broker
+          </p>
+          <p>
+            En tu Escritorio vas a encontrar todo lo que necesitás: ver tus pólizas, reportar un siniestro, seguir el estado de tus gestiones y mantener tus datos actualizados.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Componente de Sección de Siniestros
 function SiniestrosSection() {
   const handleFormularioClick = () => {
-    // URL del formulario de siniestros - ajustar según corresponda
     const formularioUrl = 'https://forms.zoho.com/polobroker1/form/Siniestro';
     window.open(formularioUrl, '_blank');
   };
@@ -480,15 +499,19 @@ function PolizasSection() {
 function App() {
   // Detectar sección desde query parameters
   const urlParams = new URLSearchParams(window.location.search);
-  const section = urlParams.get('section') || 'polizas';
+  const section = urlParams.get('section') || 'escritorio';
 
   // Renderizar según la sección
+  if (section === 'polizas') {
+    return <PolizasSection />;
+  }
+  
   if (section === 'siniestros') {
     return <SiniestrosSection />;
   }
 
-  // Por defecto: mostrar pólizas
-  return <PolizasSection />;
+  // Por defecto: mostrar Escritorio
+  return <EscritorioSection />;
 }
 
 export default App;
