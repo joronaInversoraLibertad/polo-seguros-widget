@@ -9,13 +9,12 @@ body {
   background: #fff;
 }
 
-#polizas-container {
-  padding: 20px;
-  max-width: 900px;
-  margin: 40px auto;
-}
+/* ============================================
+   SISTEMA DE TIPOGRAFÍA UNIFICADO
+   ============================================ */
 
-.polizas-title {
+/* Clase base para títulos de sección */
+.section-title {
   font-size: 36px;
   font-weight: 700;
   color: #0073aa;
@@ -23,17 +22,64 @@ body {
   text-align: center;
 }
 
-.polizas-text {
+/* Clase base para contenedor de texto descriptivo */
+.section-text {
   max-width: 700px;
-  margin: 0 auto 30px auto;
+  margin: 0 auto;
   text-align: left;
 }
 
-.polizas-text p {
+/* Clase base para párrafos descriptivos */
+.section-text p {
   font-size: 16px;
   line-height: 1.8;
   color: #333;
+  margin-bottom: 20px;
+}
+
+.section-text p:last-child {
   margin-bottom: 0;
+}
+
+/* Texto introductorio (más grande) */
+.section-text-intro {
+  font-size: 18px;
+  line-height: 1.8;
+  color: #333;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .section-title {
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+  
+  .section-text-intro {
+    font-size: 16px;
+  }
+  
+  .section-text p {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+}
+
+#polizas-container {
+  padding: 20px;
+  max-width: 900px;
+  margin: 40px auto;
+}
+
+/* Usar clases base unificadas */
+.polizas-title {
+  /* Hereda de .section-title */
+}
+
+.polizas-text {
+  margin-bottom: 30px;
+  /* Hereda de .section-text */
 }
 
 .poliza-card {
@@ -307,18 +353,8 @@ body {
     padding: 10px;
     margin: 20px auto;
   }
-  .polizas-title {
-    font-size: 28px;
-    margin-bottom: 20px;
-  }
-  
   .polizas-text {
     margin-bottom: 20px;
-  }
-  
-  .polizas-text p {
-    font-size: 15px;
-    line-height: 1.6;
   }
 }
 
@@ -337,33 +373,22 @@ body {
   text-align: center;
 }
 
+/* Usar clases base unificadas */
 .escritorio-title {
-  font-size: 36px;
-  font-weight: 700;
-  color: #0073aa;
-  margin-bottom: 30px;
-  text-align: center;
+  /* Hereda de .section-title */
 }
 
 .escritorio-text {
-  max-width: 700px;
-  text-align: left;
+  /* Hereda de .section-text */
 }
 
 .escritorio-intro {
-  font-size: 18px;
-  line-height: 1.8;
-  color: #333;
-  margin-bottom: 20px;
-  font-weight: 500;
+  /* Hereda de .section-text-intro */
 }
 
 .escritorio-text p:not(.escritorio-intro) {
-  font-size: 16px;
-  line-height: 1.8;
-  color: #666;
-  margin-bottom: 0;
   text-align: center;
+  /* Hereda de .section-text p */
 }
 
 @media (max-width: 768px) {
@@ -371,19 +396,7 @@ body {
     padding: 20px 15px;
   }
   
-  .escritorio-title {
-    font-size: 28px;
-    margin-bottom: 20px;
-  }
-  
-  .escritorio-intro {
-    font-size: 16px;
-  }
-  
-  .escritorio-text p:not(.escritorio-intro) {
-    font-size: 15px;
-    line-height: 1.6;
-  }
+  /* Los estilos responsive están en .section-title y .section-text */
 }
 
 /* Estilos para Sección de Siniestros */
@@ -401,29 +414,14 @@ body {
   text-align: center;
 }
 
+/* Usar clases base unificadas */
 .siniestros-title {
-  font-size: 36px;
-  font-weight: 700;
-  color: #0073aa;
-  margin-bottom: 30px;
-  text-align: center;
+  /* Hereda de .section-title */
 }
 
 .siniestros-text {
-  max-width: 700px;
   margin-bottom: 40px;
-  text-align: left;
-}
-
-.siniestros-text p {
-  font-size: 16px;
-  line-height: 1.8;
-  color: #333;
-  margin-bottom: 20px;
-}
-
-.siniestros-text p:last-child {
-  margin-bottom: 0;
+  /* Hereda de .section-text */
 }
 
 .btn-siniestro {
@@ -457,18 +455,8 @@ body {
     padding: 20px 15px;
   }
   
-  .siniestros-title {
-    font-size: 28px;
-    margin-bottom: 20px;
-  }
-  
   .siniestros-text {
     margin-bottom: 30px;
-  }
-  
-  .siniestros-text p {
-    font-size: 15px;
-    line-height: 1.6;
   }
   
   .btn-siniestro {
