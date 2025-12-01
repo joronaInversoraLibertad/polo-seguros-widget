@@ -339,7 +339,6 @@ function PolizasSection() {
       </div>
 
       <div className="controls">
-        <label htmlFor="dni">DNI:</label>
         <input
           id="dni"
           type="text"
