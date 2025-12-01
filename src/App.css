@@ -406,7 +406,7 @@ body {
   font-size: 18px;
   font-weight: 700;
   color: #fff;
-  background: #a3cb64;
+  background: #a3cb00;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -417,7 +417,7 @@ body {
 }
 
 .btn-siniestro:hover {
-  background: #8fb850;
+  background: #a3cb64;
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(163, 203, 100, 0.4);
 }

@@ -29,7 +29,7 @@ function EscritorioSection() {
 // Componente de Sección de Siniestros
 function SiniestrosSection() {
   const handleFormularioClick = () => {
-    const formularioUrl = 'https://forms.zoho.com/polobroker1/form/Siniestro';
+    const formularioUrl = 'https://forms.polobroker.com.ar/polobroker1/form/FORMULARIODESINIESTROS/formperma/AlNVHalw2OZBfxiLuHN7miZ2Xn5xWOLqnn3n9Q8kRZc';
     window.open(formularioUrl, '_blank');
   };
 
@@ -400,7 +400,7 @@ function PolizasSection() {
             <div className="contacto-sin-polizas">
               <p>
                 Si usted no encontró su póliza complete nuestro{' '}
-                <a href="https://forms.zoho.com/polobroker1/form/Contacto" target="_blank" rel="noopener noreferrer">
+                <a href="https://forms.polobroker.com.ar/polobroker1/form/Contacto/formperma/VSkV4YuMmodHmK8d21ZPAoEAsk4EReLjQZXsZN9VNuM" target="_blank" rel="noopener noreferrer">
                   formulario de contacto
                 </a>{' '}
                 y lo ayudaremos.
