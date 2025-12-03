@@ -6,21 +6,167 @@ const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 
 const POLIZAS_POR_PAGINA = 10;
 
+// Componente reutilizable para las cards de acceso rápido
+function AccesoCard({ href, icon, title, text, ctaText, onClick }) {
+  const handleClick = (e) => {
+    if (onClick) {
+      e.preventDefault();
+      onClick();
+    }
+    // Si no hay onClick, el href normal funcionará
+  };
+
+  return (
+    <a href={href} className="pb-card" onClick={handleClick}>
+      <div className="pb-card__icon">
+        <i className={icon}></i>
+      </div>
+      <div className="pb-card__title">{title}</div>
+      <div className="pb-card__text">{text}</div>
+      <div className="pb-card__cta">
+        {ctaText} <i className="fas fa-chevron-right"></i>
+      </div>
+    </a>
+  );
+}
+
 // Componente de Sección de Escritorio
 function EscritorioSection() {
+  // Función para navegar a una sección
+  const navegarASeccion = (seccion) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('section', seccion);
+    window.location.href = url.toString();
+  };
+
+  // Datos de las cards de acceso rápido
+  const accesosRapidos = [
+    {
+      href: "?section=polizas",
+      icon: "fas fa-file-contract",
+      title: "Ver mis pólizas",
+      text: "Consultá las pólizas vigentes, coberturas, sumas aseguradas y vencimientos.",
+      ctaText: "Ver detalle",
+      onClick: () => navegarASeccion('polizas')
+    },
+    {
+      href: "?section=siniestros",
+      icon: "fas fa-car-crash",
+      title: "Reportar un siniestro",
+      text: "Cargá un siniestro nuevo y adjuntá la información necesaria para agilizar la gestión.",
+      ctaText: "Iniciar reporte",
+      onClick: () => navegarASeccion('siniestros')
+    },
+    {
+      href: "https://polobroker.zohocreatorportal.com/#Perfil_usuario",
+      icon: "fas fa-user",
+      title: "Mi perfil",
+      text: "Revisá y actualizá tus datos personales y de contacto para que podamos asistirte mejor.",
+      ctaText: "Editar datos"
+    },
+    {
+      href: "#Page:Contacto",
+      icon: "fas fa-headset",
+      title: "Contacto y ayuda",
+      text: "Encontrá los canales de atención de Polo Broker para consultas, dudas o emergencias.",
+      ctaText: "Ver canales"
+    }
+  ];
+
   return (
-      <div id="escritorio-container">
-      <div className="escritorio-content">
-        <h1 className="section-title escritorio-title">Escritorio</h1>
-        
-        <div className="section-text escritorio-text">
-          <p className="section-text-intro escritorio-intro">
-            Este es tu espacio personal en Polo Broker
-          </p>
-          <p>
-            En tu Escritorio vas a encontrar todo lo que necesitás: ver tus pólizas, reportar un siniestro, seguir el estado de tus gestiones y mantener tus datos actualizados.
-          </p>
-        </div>
+    <div className="pb-portal">
+      <div className="pb-portal__wrapper">
+
+        {/* HERO PRINCIPAL */}
+        <section className="pb-hero">
+          <div className="pb-hero__text">
+            <div className="pb-hero__eyebrow">
+              <i className="fas fa-shield-alt"></i>
+              <span>Portal de asegurados</span>
+            </div>
+            <h1 className="pb-hero__title">Escritorio Polo Conecta</h1>
+            <p className="pb-hero__subtitle">
+              Gestioná tus pólizas, reportá siniestros y mantené tus datos al día, todo en un mismo lugar y con el respaldo de Polo Broker.
+            </p>
+
+            <div className="pb-hero__pill">
+              <i className="fas fa-bolt"></i>
+              <span>Atención inmediata • Autonomía • Trayectoria</span>
+            </div>
+            <div className="pb-hero__note">
+              Conectado a tus coberturas para que tengas siempre a mano la información que necesitás.
+            </div>
+          </div>
+
+          <aside className="pb-hero__panel">
+            <div className="pb-hero__panel-title">
+              <span>Tu resumen rápido de gestiones</span>
+              <span className="pb-hero__pill-mini">Siempre disponible</span>
+            </div>
+            <ul className="pb-hero__list">
+              <li>
+                <i className="fas fa-file-alt"></i>
+                <div>
+                  <strong>Revisá tus pólizas</strong>
+                  <span>Accedé al detalle de tus coberturas y verificá vencimientos.</span>
+                </div>
+              </li>
+              <li>
+                <i className="fas fa-exclamation-triangle"></i>
+                <div>
+                  <strong>Reportá un siniestro</strong>
+                  <span>Cargá el evento en minutos y seguí el estado de tu gestión.</span>
+                </div>
+              </li>
+              <li>
+                <i className="fas fa-user-check"></i>
+                <div>
+                  <strong>Mantené tus datos actualizados</strong>
+                  <span>Actualizá teléfonos, emails y datos de contacto para una mejor atención.</span>
+                </div>
+              </li>
+            </ul>
+          </aside>
+        </section>
+
+        {/* ACCESOS RÁPIDOS */}
+        <section className="pb-actions">
+          <div className="pb-section-title">Accesos rápidos</div>
+          <div className="pb-section-subtitle">
+            Elegí qué querés hacer hoy. Todo está pensado para que lo resuelvas de forma simple y segura.
+          </div>
+
+          <div className="pb-actions__grid">
+            {accesosRapidos.map((acceso, index) => (
+              <AccesoCard
+                key={index}
+                href={acceso.href}
+                icon={acceso.icon}
+                title={acceso.title}
+                text={acceso.text}
+                ctaText={acceso.ctaText}
+                onClick={acceso.onClick}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* AYUDA RÁPIDA */}
+        <section className="pb-help">
+          <div className="pb-help__text">
+            <strong>¿Necesitás ayuda con tu seguro?</strong><br />
+            Nuestro equipo está para acompañarte en cada paso: contratación, seguimiento de siniestros y consultas generales.
+          </div>
+          <div className="pb-help__cta">
+            <span className="pb-help__pill">
+              <i className="fas fa-phone-alt"></i> 011 7079-3090
+            </span>
+            <a href="mailto:contacto@polobroker.com.ar" className="pb-help__pill">
+              <i className="fas fa-envelope"></i> contacto@polobroker.com.ar
+            </a>
+          </div>
+        </section>
+
       </div>
     </div>
   );
@@ -34,25 +180,28 @@ function SiniestrosSection() {
   };
 
   return (
-      <div id="siniestros-container">
-      <div className="siniestros-content">
-        <h1 className="section-title siniestros-title">Siniestros</h1>
-        
-        <div className="section-text siniestros-text">
-          <p>
-            En Polo Broker te acompañamos en cada paso. Puedes ingresar y ver el formulario que necesitas para registrar tu siniestro, puedes comenzar completándolo, con la información de tu siniestro y nuestro equipo se pondrá en contacto para brindarte la asistencia necesaria y acompañarte en el proceso.
-          </p>
-          <p>
-            Tu denuncia será analizada a la brevedad para ofrecerte una respuesta personalizada y resolver tu situación con la mayor rapidez posible.
-          </p>
+    <div className="pb-portal">
+      <div className="pb-portal__wrapper">
+        <div className="pb-siniestros">
+          <h1 className="pb-hero__title">Siniestros</h1>
+          
+          <div className="pb-siniestros__content">
+            <p className="pb-hero__subtitle">
+              En Polo Broker te acompañamos en cada paso. Puedes ingresar y ver el formulario que necesitas para registrar tu siniestro, puedes comenzar completándolo, con la información de tu siniestro y nuestro equipo se pondrá en contacto para brindarte la asistencia necesaria y acompañarte en el proceso.
+            </p>
+            <p className="pb-hero__note">
+              Tu denuncia será analizada a la brevedad para ofrecerte una respuesta personalizada y resolver tu situación con la mayor rapidez posible.
+            </p>
+          </div>
+          
+          <button 
+            className="pb-btn-siniestro"
+            onClick={handleFormularioClick}
+          >
+            <i className="fas fa-file-alt"></i>
+            FORMULARIO DE SINIESTRO
+          </button>
         </div>
-        
-        <button 
-          className="btn-siniestro"
-          onClick={handleFormularioClick}
-        >
-          FORMULARIO DE SINIESTRO
-        </button>
       </div>
     </div>
   );
@@ -329,14 +478,16 @@ function PolizasSection() {
   const polizasPagina = polizasFiltered.slice(startIndex, endIndex);
 
   return (
-    <div id="polizas-container">
-      <h1 className="section-title polizas-title">Mis Pólizas</h1>
-      
-      <div className="section-text polizas-text">
-        <p>
-          En este sector podés ver tus pólizas y descargar los documentos.
-        </p>
-      </div>
+    <div className="pb-portal">
+      <div className="pb-portal__wrapper">
+        <div className="pb-polizas" id="polizas-container">
+          <h1 className="pb-hero__title">Mis Pólizas</h1>
+          
+          <div className="pb-polizas__content">
+            <p className="pb-hero__subtitle">
+              En este sector podés ver tus pólizas y descargar los documentos.
+            </p>
+          </div>
 
       <div className="controls">
         <input
@@ -497,6 +648,8 @@ function PolizasSection() {
           <strong style={{ color: '#2e7d32' }}>{resultado}</strong>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 }
