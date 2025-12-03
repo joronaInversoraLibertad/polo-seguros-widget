@@ -12,8 +12,15 @@ function AccesoCard({ href, icon, title, text, ctaText, onClick }) {
     if (onClick) {
       e.preventDefault();
       onClick();
+      return;
     }
-    // Si no hay onClick, el href normal funcionará
+    
+    // Si es una URL externa (no relativa), abrir en la misma ventana
+    if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+      e.preventDefault();
+      window.top.location.href = href; // Usar window.top para salir del iframe si está embebido
+    }
+    // Si no hay onClick y es URL relativa, el href normal funcionará
   };
 
   return (
