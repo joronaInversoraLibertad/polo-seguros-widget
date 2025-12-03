@@ -187,34 +187,172 @@ function EscritorioSection() {
 
 // Componente de Sección de Siniestros
 function SiniestrosSection() {
-  const handleFormularioClick = () => {
-    const formularioUrl = 'https://forms.polobroker.com.ar/polobroker1/form/FORMULARIODESINIESTROS/formperma/AlNVHalw2OZBfxiLuHN7miZ2Xn5xWOLqnn3n9Q8kRZc';
-    window.open(formularioUrl, '_blank');
-  };
+  const formularios = [
+    {
+      href: "https://forms.polobroker.com.ar/polobroker1/form/DenunciadeSiniestroHogar/formperma/UrEQklXhzTi2vw7aleh-5nquor9Bfyvcy6Z5FtYG8dA",
+      icon: "fas fa-house-damage",
+      title: "Formulario de Hogar",
+      text: "Declaración de siniestros en tu vivienda: incendio, daños por agua, robo y otros eventos amparados en tu seguro de hogar.",
+      ctaText: "Completar denuncia"
+    },
+    {
+      href: "https://forms.polobroker.com.ar/polobroker1/form/FORMULARIODESINIESTROS/formperma/AlNVHalw2OZBfxiLuHN7miZ2Xn5xWOLqnn3n9Q8kRZc",
+      icon: "fas fa-clipboard-list",
+      title: "Formulario general de siniestros",
+      text: "Utilizá este formulario cuando tu siniestro no encaje en otro tipo específico o según te indique tu productor.",
+      ctaText: "Iniciar trámite"
+    },
+    {
+      href: "https://forms.polobroker.com.ar/polobroker1/form/DENUNCIADEFALLECIMIENTOHAYQUEEDITAR/formperma/OlYiEh3wWuRQLfA7eXz7t8emJVX5jBLh-n3wfhmosVA",
+      icon: "fas fa-user-minus",
+      title: "Denuncia de fallecimiento",
+      text: "Informá el fallecimiento del asegurado y cargá la documentación necesaria para la gestión del siniestro de vida.",
+      ctaText: "Denunciar fallecimiento"
+    },
+    {
+      href: "https://forms.polobroker.com.ar/polobroker1/form/Denunciachoqueconpeatn/formperma/LmW8LLk1C1hG138lrujW5ch0EJEuN0dNpvhnjLVkqms",
+      icon: "fas fa-person-walking",
+      title: "Choque con peatón",
+      text: "Registro de siniestros donde interviene un peatón. Detallá cómo ocurrió el hecho y los datos de las personas involucradas.",
+      ctaText: "Denunciar siniestro"
+    },
+    {
+      href: "https://forms.polobroker.com.ar/polobroker1/form/DenunciaIncendioparcialtotal/formperma/r5g61yonBOt2owXJCw5CuS0ZFG-wcqM8tPD-JEE5kX4",
+      icon: "fas fa-fire",
+      title: "Incendio parcial / total",
+      text: "Denunciá daños por incendio en tu vehículo o unidad asegurada, indicando alcance del daño y participación de bomberos.",
+      ctaText: "Registrar incendio"
+    },
+    {
+      href: "https://forms.polobroker.com.ar/polobroker1/form/Denunciaparaunidadquesufrigranizo/formperma/C1Ll6GAW-pE9F_3u9lyrN7lm9P2K7lGENuTCtxcQhAY",
+      icon: "fas fa-cloud-showers-heavy",
+      title: "Unidad que sufrió granizo",
+      text: "Informá los daños producidos por granizo en tu vehículo y adjuntá fotos para evaluar el impacto del evento climático.",
+      ctaText: "Denunciar granizo"
+    },
+    {
+      href: "https://forms.polobroker.com.ar/polobroker1/form/Reportaunincidenteconsupropiovehculo1/formperma/z5brhvF-k9BmOQruT08uVoxCo9DoNir_-oSKW2iDP4U",
+      icon: "fas fa-car-burst",
+      title: "Autochoque con unidad propia",
+      text: "Siniestros en los que tu vehículo impacta contra un objeto fijo o se daña sin intervención de terceros.",
+      ctaText: "Cargar autochoque"
+    },
+    {
+      href: "https://forms.polobroker.com.ar/polobroker1/form/DenunciadeRoboParcialTotal/formperma/ZA--FO8RWoKbcgsvfqjJUD5o9_WtDq-9gWaSLDRKudk",
+      icon: "fas fa-user-secret",
+      title: "Denuncia por robo",
+      text: "Comunicá robos o hurtos de tu vehículo o bienes asegurados, indicando fecha, lugar y denuncia policial realizada.",
+      ctaText: "Denunciar robo"
+    },
+    {
+      href: "https://forms.polobroker.com.ar/polobroker1/form/DenunciadeRoboParcialTotal/formperma/ZA--FO8RWoKbcgsvfqjJUD5o9_WtDq-9gWaSLDRKudk",
+      icon: "fas fa-car-side",
+      title: "Choque con tercero",
+      text: "Registrá siniestros donde intervienen otros vehículos: datos del tercero, testigos, seguros y croquis del hecho.",
+      ctaText: "Denunciar choque"
+    },
+    {
+      href: "https://forms.polobroker.com.ar/polobroker1/form/Contacto/formperma/VSkV4YuMmodHmK8d21ZPAoEAsk4EReLjQZXsZN9VNuM",
+      icon: "fas fa-headset",
+      title: "Consulta sobre siniestros",
+      text: "Si tenés dudas sobre qué formulario usar o necesitás asistencia, enviá tu consulta a nuestro equipo de siniestros.",
+      ctaText: "Hacer una consulta"
+    }
+  ];
 
   return (
     <div className="pb-portal">
       <div className="pb-portal__wrapper">
-        <div className="pb-siniestros">
-          <h1 className="pb-hero__title">Siniestros</h1>
-          
-          <div className="pb-siniestros__content">
+
+        {/* HERO PRINCIPAL SINIESTROS */}
+        <section className="pb-hero">
+          <div className="pb-hero__text">
+            <div className="pb-hero__eyebrow">
+              <i className="fas fa-car-burst"></i>
+              <span>Gestión de siniestros</span>
+            </div>
+            <h1 className="pb-hero__title">Siniestros Polo Conecta</h1>
             <p className="pb-hero__subtitle">
-              En Polo Broker te acompañamos en cada paso. Puedes ingresar y ver el formulario que necesitas para registrar tu siniestro, puedes comenzar completándolo, con la información de tu siniestro y nuestro equipo se pondrá en contacto para brindarte la asistencia necesaria y acompañarte en el proceso.
+              Iniciá tu denuncia, subí la documentación y seguí cada paso del proceso de siniestros desde un solo lugar.
             </p>
-            <p className="pb-hero__note">
-              Tu denuncia será analizada a la brevedad para ofrecerte una respuesta personalizada y resolver tu situación con la mayor rapidez posible.
-            </p>
+
+            <div className="pb-hero__pill">
+              <i className="fas fa-bolt"></i>
+              <span>Atención inmediata • Acompañamiento • Transparencia</span>
+            </div>
+            <div className="pb-hero__note">
+              Elegí el tipo de evento que tuviste y completá el formulario para que nuestro equipo pueda ayudarte más rápido.
+            </div>
           </div>
-          
-          <button 
-            className="pb-btn-siniestro"
-            onClick={handleFormularioClick}
-          >
-            <i className="fas fa-file-alt"></i>
-            FORMULARIO DE SINIESTRO
-          </button>
-        </div>
+
+          <aside className="pb-hero__panel">
+            <div className="pb-hero__panel-title">
+              <span>Tu resumen rápido de siniestros</span>
+              <span className="pb-hero__pill-mini">Disponible 24/7</span>
+            </div>
+            <ul className="pb-hero__list">
+              <li>
+                <i className="fas fa-file-pen"></i>
+                <div>
+                  <strong>Iniciá una nueva denuncia</strong>
+                  <span>Seleccioná el tipo de siniestro y cargá los datos básicos del hecho.</span>
+                </div>
+              </li>
+              <li>
+                <i className="fas fa-cloud-upload-alt"></i>
+                <div>
+                  <strong>Subí documentación</strong>
+                  <span>Adjuntá fotos, presupuestos y archivos para agilizar la evaluación.</span>
+                </div>
+              </li>
+              <li>
+                <i className="fas fa-location-dot"></i>
+                <div>
+                  <strong>Seguimiento de tu caso</strong>
+                  <span>Consultá el estado de tu siniestro y las próximas acciones.</span>
+                </div>
+              </li>
+            </ul>
+          </aside>
+        </section>
+
+        {/* ACCESOS RÁPIDOS A FORMULARIOS DE DENUNCIA */}
+        <section className="pb-actions">
+          <div className="pb-section-title">Elegí el tipo de siniestro</div>
+          <div className="pb-section-subtitle">
+            Accedé directamente al formulario que corresponde al evento que querés denunciar.
+          </div>
+
+          <div className="pb-actions__grid">
+            {formularios.map((formulario, index) => (
+              <AccesoCard
+                key={index}
+                href={formulario.href}
+                icon={formulario.icon}
+                title={formulario.title}
+                text={formulario.text}
+                ctaText={formulario.ctaText}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* AYUDA RÁPIDA SINIESTROS */}
+        <section className="pb-help">
+          <div className="pb-help__text">
+            <strong>¿Tenés una urgencia o no sabés qué formulario usar?</strong><br />
+            Comunicate con el equipo de siniestros para recibir ayuda inmediata y orientación sobre el proceso.
+          </div>
+          <div className="pb-help__cta">
+            <span className="pb-help__pill">
+              <i className="fas fa-phone-alt"></i> 011 7079-3090
+            </span>
+            <a href="mailto:siniestros@polobroker.com.ar" className="pb-help__pill">
+              <i className="fas fa-envelope"></i> siniestros@polobroker.com.ar
+            </a>
+          </div>
+        </section>
+
       </div>
     </div>
   );
