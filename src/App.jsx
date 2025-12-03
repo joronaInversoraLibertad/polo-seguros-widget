@@ -34,9 +34,15 @@ function AccesoCard({ href, icon, title, text, ctaText, onClick }) {
 function EscritorioSection() {
   // Función para navegar a una sección
   const navegarASeccion = (seccion) => {
-    const url = new URL(window.location.href);
-    url.searchParams.set('section', seccion);
-    window.location.href = url.toString();
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('section', seccion);
+      window.location.href = url.toString();
+    } catch (e) {
+      // Fallback si new URL falla (ej: en Zoho Creator)
+      const separator = window.location.search ? '&' : '?';
+      window.location.href = window.location.pathname + window.location.search + separator + 'section=' + seccion + window.location.hash;
+    }
   };
 
   // Datos de las cards de acceso rápido
