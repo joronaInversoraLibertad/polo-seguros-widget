@@ -371,7 +371,6 @@ function PolizasSection() {
   const [filtroNoVigentes, setFiltroNoVigentes] = useState(true);
   const [loadingButtons, setLoadingButtons] = useState({});
   const [noResults, setNoResults] = useState(false);
-  const [dniBloqueado, setDniBloqueado] = useState(false);
 
 
   // Aplicar filtros cuando cambien los datos o los filtros
@@ -400,32 +399,6 @@ function PolizasSection() {
     setCurrentPage(1); // Reset a la primera página cuando cambien los filtros
   }, [polizasData, filtroVigentes, filtroNoVigentes]);
 
-  useEffect(() => {
-    const savedDni = localStorage.getItem('pb_dni');
-  
-    if (savedDni) {
-      console.log('DNI cargado desde localStorage:', savedDni);
-      setDni(savedDni);
-      setDniBloqueado(true);
-    } else {
-      console.log('No hay DNI en localStorage');
-    }
-  
-    // Escuchar cambios en localStorage
-    const handleStorageChange = (e) => {
-      if (e.key === 'pb_dni' && e.newValue) {
-        console.log('DNI actualizado en localStorage:', e.newValue);
-        setDni(e.newValue);
-        setDniBloqueado(true);
-      }
-    };
-  
-    window.addEventListener('storage', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
 
   const buscarPolizas = async () => {
     if (!dni.trim()) {
@@ -505,13 +478,6 @@ function PolizasSection() {
       setPolizasData(polizasArray);
       if (polizasArray.length === 0) {
         setNoResults(true);
-      }
-      // Si hubo resultados y el DNI no estaba bloqueado, lo guardamos
-      if (polizasArray.length > 0 && !dniBloqueado) {
-        const limpio = dni.trim();
-        localStorage.setItem('pb_dni', limpio);
-        setDni(limpio);
-        setDniBloqueado(true);
       }
 
     } catch (err) {
@@ -685,7 +651,7 @@ function PolizasSection() {
               value={dni}
               onChange={(e) => setDni(e.target.value)}
               onKeyPress={handleKeyPress}
-              disabled={loading || dniBloqueado}
+              disabled={loading}
             />
 
             <button
