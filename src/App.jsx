@@ -401,42 +401,61 @@ function PolizasSection() {
   }, [polizasData, filtroVigentes, filtroNoVigentes]);
 
   useEffect(() => {
-    // Autocompletar DNI desde Perfil_usuario en Zoho Creator
-    if (!window.ZOHO || !window.ZOHO.CREATOR) {
-      console.warn("ZOHO.CREATOR SDK no está disponible en esta página");
+    // Intentar obtener el SDK tanto en mayúsculas como minúsculas
+    const creatorSDK =
+      (window.ZOHO && window.ZOHO.CREATOR) ||
+      (window.zoho && window.zoho.creator);
+
+    if (!creatorSDK) {
+      console.warn("Zoho Creator SDK no está disponible en esta página");
       return;
     }
 
     // 1) Inicializar SDK
-    window.ZOHO.CREATOR.init().then((data) => {
-      const email = data?.user?.email_id;
-      if (!email) return;
+    creatorSDK
+      .init()
+      .then((data) => {
+        // En portales suele venir así:
+        const email =
+          data?.user?.email_id ||
+          data?.user?.email ||
+          data?.user?.login_id;
 
-      // 2) Pedir el registro de Perfil_usuario para ese email
-      const config = {
-        appName: "app-clientes-polobroker",
-        reportName: "Perfil_usuario_Report",
-        criteria: `(Email == "${email}")`
-      };
+        console.log("Email detectado para buscar DNI:", email);
+        if (!email) return;
 
-      window.ZOHO.CREATOR.API.getAllRecords(config).then((resp) => {
-        const rows = resp?.data || [];
-        if (!rows.length) return;
+        // 2) Pedir el registro de Perfil_usuario para ese email
+        const config = {
+          appName: "app-clientes-polobroker",
+          reportName: "Perfil_usuario_Report", // link-name del reporte
+          criteria: `(Email == "${email}")`,
+          page: 1,
+          pageSize: 1
+        };
 
-        const perfil = rows[0];
-        const dniPerfil = perfil.DNI;
+        creatorSDK.API.getAllRecords(config)
+          .then((resp) => {
+            const rows = resp?.data || [];
+            console.log("Registros Perfil_usuario encontrados:", rows);
+            if (!rows.length) return;
 
-        if (dniPerfil) {
-          setDni(String(dniPerfil));
-          setDniBloqueado(true); // lo marcamos como bloqueado
-        }
-      }).catch((err) => {
-        console.error("Error leyendo Perfil_usuario:", err);
+            const perfil = rows[0];
+            const dniPerfil = perfil.DNI;
+
+            if (dniPerfil) {
+              setDni(String(dniPerfil));
+              setDniBloqueado(true); // lo marcamos como bloqueado
+            }
+          })
+          .catch((err) => {
+            console.error("Error leyendo Perfil_usuario:", err);
+          });
+      })
+      .catch((err) => {
+        console.error("Error inicializando Zoho Creator SDK:", err);
       });
-    }).catch((err) => {
-      console.error("Error inicializando ZOHO.CREATOR:", err);
-    });
   }, []);
+
 
 
   const buscarPolizas = async () => {
