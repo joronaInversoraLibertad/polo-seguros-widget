@@ -14,7 +14,7 @@ function AccesoCard({ href, icon, title, text, ctaText, onClick }) {
       onClick();
       return;
     }
-    
+
     // Si es una URL externa (no relativa), abrir en la misma ventana
     if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
       e.preventDefault();
@@ -371,6 +371,8 @@ function PolizasSection() {
   const [filtroNoVigentes, setFiltroNoVigentes] = useState(true);
   const [loadingButtons, setLoadingButtons] = useState({});
   const [noResults, setNoResults] = useState(false);
+  const [dniBloqueado, setDniBloqueado] = useState(false);
+
 
   // Aplicar filtros cuando cambien los datos o los filtros
   useEffect(() => {
@@ -383,24 +385,63 @@ function PolizasSection() {
       setPolizasFiltered([]);
       return;
     }
-    
+
     if (filtroVigentes && filtroNoVigentes) {
       setPolizasFiltered(polizasData);
       return;
     }
-    
+
     const filtered = polizasData.filter(p => {
       const esVigente = p.estado === 'vigente';
       return (filtroVigentes && esVigente) || (filtroNoVigentes && !esVigente);
     });
-    
+
     setPolizasFiltered(filtered);
     setCurrentPage(1); // Reset a la primera página cuando cambien los filtros
   }, [polizasData, filtroVigentes, filtroNoVigentes]);
 
+  useEffect(() => {
+    // Autocompletar DNI desde Perfil_usuario en Zoho Creator
+    if (!window.ZOHO || !window.ZOHO.CREATOR) {
+      console.warn("ZOHO.CREATOR SDK no está disponible en esta página");
+      return;
+    }
+
+    // 1) Inicializar SDK
+    window.ZOHO.CREATOR.init().then((data) => {
+      const email = data?.user?.email_id;
+      if (!email) return;
+
+      // 2) Pedir el registro de Perfil_usuario para ese email
+      const config = {
+        appName: "app-clientes-polobroker",
+        reportName: "Perfil_usuario_Report",
+        criteria: `(Email == "${email}")`
+      };
+
+      window.ZOHO.CREATOR.API.getAllRecords(config).then((resp) => {
+        const rows = resp?.data || [];
+        if (!rows.length) return;
+
+        const perfil = rows[0];
+        const dniPerfil = perfil.DNI;
+
+        if (dniPerfil) {
+          setDni(String(dniPerfil));
+          setDniBloqueado(true); // lo marcamos como bloqueado
+        }
+      }).catch((err) => {
+        console.error("Error leyendo Perfil_usuario:", err);
+      });
+    }).catch((err) => {
+      console.error("Error inicializando ZOHO.CREATOR:", err);
+    });
+  }, []);
+
+
   const buscarPolizas = async () => {
     if (!dni.trim()) {
-      alert('Por favor ingrese un DNI o CUIT');
+      alert('Por favor ingrese su DNI');
       return;
     }
 
@@ -441,7 +482,7 @@ function PolizasSection() {
 
       results.forEach(entry => {
         if (!entry || !entry.success || !Array.isArray(entry.polizas)) return;
-        
+
         entry.polizas.forEach(p => {
           const companyKeyRaw = (entry.company || entry.companyName || entry.companyKey || '');
           const companyKey = companyKeyRaw.toLowerCase().replace(/\s+/g, '');
@@ -556,9 +597,9 @@ function PolizasSection() {
     );
 
     const numeroParaDocumento = poliza.numeroConMetadata || poliza.numero;
-    
+
     const botones = [];
-    
+
     // Botón Ver Póliza (siempre)
     const keyVerPoliza = `${poliza.numero}-poliza`;
     botones.push(
@@ -633,172 +674,173 @@ function PolizasSection() {
       <div className="pb-portal__wrapper">
         <div className="pb-polizas" id="polizas-container">
           <h1 className="pb-hero__title">Mis Pólizas</h1>
-          
+
           <div className="pb-polizas__content">
             <p className="pb-hero__subtitle">
               En este sector podés ver tus pólizas y descargar los documentos.
             </p>
           </div>
 
-      <div className="controls">
-        <input
-          id="dni"
-          type="text"
-          placeholder="Ingrese su DNI"
-          value={dni}
-          onChange={(e) => setDni(e.target.value)}
-          onKeyPress={handleKeyPress}
-          disabled={loading}
-        />
-        <button
-          id="btn-load"
-          className="btn-poliza"
-          onClick={buscarPolizas}
-          disabled={loading}
-        >
-          {loading ? <span className="spinner"></span> : 'Cargar pólizas'}
-        </button>
-      </div>
+          <div className="controls">
+            <input
+              id="dni"
+              type="text"
+              placeholder="Ingrese su DNI"
+              value={dni}
+              onChange={(e) => setDni(e.target.value)}
+              onKeyPress={handleKeyPress}
+              disabled={loading || dniBloqueado}
+            />
 
-      {polizasData.length > 0 && (
-        <div className="filtros-wrapper">
-          <div className="filtros-estado">
-            <label>
-              <input
-                type="checkbox"
-                checked={filtroVigentes}
-                onChange={() => handleFiltroChange('vigentes')}
-              />
-              <span>Vigente</span>
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={filtroNoVigentes}
-                onChange={() => handleFiltroChange('no-vigentes')}
-              />
-              <span>No Vigente</span>
-            </label>
+            <button
+              id="btn-load"
+              className="btn-poliza"
+              onClick={buscarPolizas}
+              disabled={loading}
+            >
+              {loading ? <span className="spinner"></span> : 'Cargar pólizas'}
+            </button>
           </div>
-        </div>
-      )}
 
-      <div id="polizas-lista">
-        {!polizasData.length && !error && !loading && !noResults && (
-          <p style={{ textAlign: 'center', color: '#666' }}>
-            Ingrese su DNI y haga clic en "Cargar pólizas" para comenzar.
-          </p>
-        )}
-
-        {error && (
-          <p style={{ textAlign: 'center', color: '#c00' }}>{error}</p>
-        )}
-
-        {polizasData.length > 0 && polizasFiltered.length === 0 && (
-          <p style={{ textAlign: 'center', color: '#666', marginBottom: '20px' }}>
-            No hay pólizas que coincidan con los filtros seleccionados.
-          </p>
-        )}
-
-        {noResults && !loading && (
-          <div>
-            <p style={{ textAlign: 'center', color: '#666', marginBottom: '20px' }}>
-              No se encontraron pólizas con este número de DNI.
-            </p>
-            <div className="contacto-sin-polizas">
-              <p>
-                Si usted no encontró su póliza complete nuestro{' '}
-                <a href="https://forms.polobroker.com.ar/polobroker1/form/Contacto/formperma/VSkV4YuMmodHmK8d21ZPAoEAsk4EReLjQZXsZN9VNuM" target="_blank" rel="noopener noreferrer">
-                  formulario de contacto
-                </a>{' '}
-                y lo ayudaremos.
-              </p>
+          {polizasData.length > 0 && (
+            <div className="filtros-wrapper">
+              <div className="filtros-estado">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={filtroVigentes}
+                    onChange={() => handleFiltroChange('vigentes')}
+                  />
+                  <span>Vigente</span>
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={filtroNoVigentes}
+                    onChange={() => handleFiltroChange('no-vigentes')}
+                  />
+                  <span>No Vigente</span>
+                </label>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {polizasPagina.length > 0 && polizasPagina.map((poliza, idx) => {
-          const badgeClass = poliza.estado === 'vigente' ? 'badge-vigente' : 'badge-vencida';
-          const badgeTexto = poliza.estado === 'vigente' ? 'Vigente' : 'No Vigente';
+          <div id="polizas-lista">
+            {!polizasData.length && !error && !loading && !noResults && (
+              <p style={{ textAlign: 'center', color: '#666' }}>
+                Ingrese su DNI y haga clic en "Cargar pólizas" para comenzar.
+              </p>
+            )}
 
-          return (
-            <div key={idx} className="poliza-card">
-              <div className="poliza-header">
-                <div>
-                  <h3 style={{ margin: '0 0 5px 0', color: '#0073aa' }}>
-                    Póliza N° {poliza.numero}
-                  </h3>
-                  <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>
-                    {poliza.aseguradoraNombre || '-'}
+            {error && (
+              <p style={{ textAlign: 'center', color: '#c00' }}>{error}</p>
+            )}
+
+            {polizasData.length > 0 && polizasFiltered.length === 0 && (
+              <p style={{ textAlign: 'center', color: '#666', marginBottom: '20px' }}>
+                No hay pólizas que coincidan con los filtros seleccionados.
+              </p>
+            )}
+
+            {noResults && !loading && (
+              <div>
+                <p style={{ textAlign: 'center', color: '#666', marginBottom: '20px' }}>
+                  No se encontraron pólizas con este número de DNI.
+                </p>
+                <div className="contacto-sin-polizas">
+                  <p>
+                    Si usted no encontró su póliza complete nuestro{' '}
+                    <a href="https://forms.polobroker.com.ar/polobroker1/form/Contacto/formperma/VSkV4YuMmodHmK8d21ZPAoEAsk4EReLjQZXsZN9VNuM" target="_blank" rel="noopener noreferrer">
+                      formulario de contacto
+                    </a>{' '}
+                    y lo ayudaremos.
                   </p>
                 </div>
-                <span className={badgeClass}>{badgeTexto}</span>
               </div>
+            )}
 
-              <div className="poliza-info">
-                {poliza.bien && (
-                  <p style={{ margin: '5px 0', fontSize: '14px' }}>
-                    <strong>Bien:</strong> {poliza.bien}
-                  </p>
-                )}
-                <p style={{ margin: '5px 0', fontSize: '14px' }}>
-                  <strong>Tipo:</strong> {poliza.tipo || '-'}
-                </p>
-                {poliza.cobertura && poliza.cobertura.plan && poliza.cobertura.plan !== 0 && poliza.cobertura.plan !== '0' && String(poliza.cobertura.plan).trim() !== '' && (
-                  <p style={{ margin: '5px 0', fontSize: '14px' }}>
-                    <strong>Plan:</strong> {poliza.cobertura.plan}
-                  </p>
-                )}
-                {(poliza.certificateNumber !== null && poliza.certificateNumber !== undefined && poliza.certificateNumber !== '' && poliza.certificateNumber !== 0 && poliza.certificateNumber !== '0') ? (
-                  <p style={{ margin: '5px 0', fontSize: '14px' }}>
-                    <strong>Número de certificado:</strong> {poliza.certificateNumber}
-                  </p>
-                ) : null}
-                <p style={{ margin: '5px 0', fontSize: '14px' }}>
-                  <strong>Descripción:</strong> {poliza.descripcion || '-'}
-                </p>
-                <p style={{ margin: '5px 0', fontSize: '14px' }}>
-                  <strong>Vigencia:</strong> {poliza.vigenciaDesde} - {poliza.vigenciaHasta}
-                </p>
-              </div>
+            {polizasPagina.length > 0 && polizasPagina.map((poliza, idx) => {
+              const badgeClass = poliza.estado === 'vigente' ? 'badge-vigente' : 'badge-vencida';
+              const badgeTexto = poliza.estado === 'vigente' ? 'Vigente' : 'No Vigente';
 
-              <div className="poliza-botones">
-                {renderBotonesDocumentos(poliza)}
+              return (
+                <div key={idx} className="poliza-card">
+                  <div className="poliza-header">
+                    <div>
+                      <h3 style={{ margin: '0 0 5px 0', color: '#0073aa' }}>
+                        Póliza N° {poliza.numero}
+                      </h3>
+                      <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>
+                        {poliza.aseguradoraNombre || '-'}
+                      </p>
+                    </div>
+                    <span className={badgeClass}>{badgeTexto}</span>
+                  </div>
+
+                  <div className="poliza-info">
+                    {poliza.bien && (
+                      <p style={{ margin: '5px 0', fontSize: '14px' }}>
+                        <strong>Bien:</strong> {poliza.bien}
+                      </p>
+                    )}
+                    <p style={{ margin: '5px 0', fontSize: '14px' }}>
+                      <strong>Tipo:</strong> {poliza.tipo || '-'}
+                    </p>
+                    {poliza.cobertura && poliza.cobertura.plan && poliza.cobertura.plan !== 0 && poliza.cobertura.plan !== '0' && String(poliza.cobertura.plan).trim() !== '' && (
+                      <p style={{ margin: '5px 0', fontSize: '14px' }}>
+                        <strong>Plan:</strong> {poliza.cobertura.plan}
+                      </p>
+                    )}
+                    {(poliza.certificateNumber !== null && poliza.certificateNumber !== undefined && poliza.certificateNumber !== '' && poliza.certificateNumber !== 0 && poliza.certificateNumber !== '0') ? (
+                      <p style={{ margin: '5px 0', fontSize: '14px' }}>
+                        <strong>Número de certificado:</strong> {poliza.certificateNumber}
+                      </p>
+                    ) : null}
+                    <p style={{ margin: '5px 0', fontSize: '14px' }}>
+                      <strong>Descripción:</strong> {poliza.descripcion || '-'}
+                    </p>
+                    <p style={{ margin: '5px 0', fontSize: '14px' }}>
+                      <strong>Vigencia:</strong> {poliza.vigenciaDesde} - {poliza.vigenciaHasta}
+                    </p>
+                  </div>
+
+                  <div className="poliza-botones">
+                    {renderBotonesDocumentos(poliza)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {polizasFiltered.length > POLIZAS_POR_PAGINA && (
+            <div id="polizas-pagination">
+              <div className="pagination-controls">
+                <button
+                  className="btn-poliza"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Anterior
+                </button>
+                <span className="page-info">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <button
+                  className="btn-poliza"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Siguiente
+                </button>
               </div>
             </div>
-          );
-        })}
-      </div>
+          )}
 
-      {polizasFiltered.length > POLIZAS_POR_PAGINA && (
-        <div id="polizas-pagination">
-          <div className="pagination-controls">
-            <button
-              className="btn-poliza"
-              onClick={() => setCurrentPage(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              Anterior
-            </button>
-            <span className="page-info">
-              Página {currentPage} de {totalPages}
-            </span>
-            <button
-              className="btn-poliza"
-              onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              Siguiente
-            </button>
-          </div>
-        </div>
-      )}
-
-      {resultado && (
-        <div id="resultado-global" style={{ display: 'block' }}>
-          <strong style={{ color: '#2e7d32' }}>{resultado}</strong>
-        </div>
-      )}
+          {resultado && (
+            <div id="resultado-global" style={{ display: 'block' }}>
+              <strong style={{ color: '#2e7d32' }}>{resultado}</strong>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -815,7 +857,7 @@ function App() {
   if (section === 'polizas') {
     return <PolizasSection />;
   }
-  
+
   if (section === 'siniestros') {
     return <SiniestrosSection />;
   }
