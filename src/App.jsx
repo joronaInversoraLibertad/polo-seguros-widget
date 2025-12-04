@@ -401,62 +401,31 @@ function PolizasSection() {
   }, [polizasData, filtroVigentes, filtroNoVigentes]);
 
   useEffect(() => {
-    // Intentar obtener el SDK tanto en mayúsculas como minúsculas
-    const creatorSDK =
-      (window.ZOHO && window.ZOHO.CREATOR) ||
-      (window.zoho && window.zoho.creator);
-
-    if (!creatorSDK) {
-      console.warn("Zoho Creator SDK no está disponible en esta página");
-      return;
+    const savedDni = localStorage.getItem('pb_dni');
+  
+    if (savedDni) {
+      console.log('DNI cargado desde localStorage:', savedDni);
+      setDni(savedDni);
+      setDniBloqueado(true);
+    } else {
+      console.log('No hay DNI en localStorage');
     }
-
-    // 1) Inicializar SDK
-    creatorSDK
-      .init()
-      .then((data) => {
-        // En portales suele venir así:
-        const email =
-          data?.user?.email_id ||
-          data?.user?.email ||
-          data?.user?.login_id;
-
-        console.log("Email detectado para buscar DNI:", email);
-        if (!email) return;
-
-        // 2) Pedir el registro de Perfil_usuario para ese email
-        const config = {
-          appName: "app-clientes-polobroker",
-          reportName: "Perfil_usuario_Report", // link-name del reporte
-          criteria: `(Email == "${email}")`,
-          page: 1,
-          pageSize: 1
-        };
-
-        creatorSDK.API.getAllRecords(config)
-          .then((resp) => {
-            const rows = resp?.data || [];
-            console.log("Registros Perfil_usuario encontrados:", rows);
-            if (!rows.length) return;
-
-            const perfil = rows[0];
-            const dniPerfil = perfil.DNI;
-
-            if (dniPerfil) {
-              setDni(String(dniPerfil));
-              setDniBloqueado(true); // lo marcamos como bloqueado
-            }
-          })
-          .catch((err) => {
-            console.error("Error leyendo Perfil_usuario:", err);
-          });
-      })
-      .catch((err) => {
-        console.error("Error inicializando Zoho Creator SDK:", err);
-      });
+  
+    // Escuchar cambios en localStorage
+    const handleStorageChange = (e) => {
+      if (e.key === 'pb_dni' && e.newValue) {
+        console.log('DNI actualizado en localStorage:', e.newValue);
+        setDni(e.newValue);
+        setDniBloqueado(true);
+      }
+    };
+  
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
-
-
 
   const buscarPolizas = async () => {
     if (!dni.trim()) {
@@ -537,6 +506,14 @@ function PolizasSection() {
       if (polizasArray.length === 0) {
         setNoResults(true);
       }
+      // Si hubo resultados y el DNI no estaba bloqueado, lo guardamos
+      if (polizasArray.length > 0 && !dniBloqueado) {
+        const limpio = dni.trim();
+        localStorage.setItem('pb_dni', limpio);
+        setDni(limpio);
+        setDniBloqueado(true);
+      }
+
     } catch (err) {
       setError('Error al cargar: ' + (err.message || 'Error desconocido'));
     } finally {
