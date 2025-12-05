@@ -371,7 +371,21 @@ function PolizasSection() {
   const [filtroNoVigentes, setFiltroNoVigentes] = useState(true);
   const [loadingButtons, setLoadingButtons] = useState({});
   const [noResults, setNoResults] = useState(false);
+  const [emailUsuario, setEmailUsuario] = useState(null);
 
+
+  // Obtener email del usuario al cargar (desde parámetro URL)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get('email');
+    
+    if (email) {
+      setEmailUsuario(email);
+      // Cargar pólizas automáticamente por email
+      buscarPolizasPorEmail(email);
+    }
+    // Si no hay email, mantener comportamiento actual (mostrar input DNI)
+  }, []);
 
   // Aplicar filtros cuando cambien los datos o los filtros
   useEffect(() => {
@@ -399,6 +413,83 @@ function PolizasSection() {
     setCurrentPage(1); // Reset a la primera página cuando cambien los filtros
   }, [polizasData, filtroVigentes, filtroNoVigentes]);
 
+
+  // Nueva función para buscar pólizas por email
+  const buscarPolizasPorEmail = async (email) => {
+    setLoading(true);
+    setError(null);
+    setPolizasData([]);
+    setPolizasFiltered([]);
+    setResultado('');
+    setNoResults(false);
+
+    try {
+      const response = await fetch(
+        `${API_BASE}/polizas-buscar-por-email?email=${encodeURIComponent(email)}`, 
+        {
+          headers: {
+            'apikey': API_KEY,
+            'Authorization': `Bearer ${API_KEY}`
+          }
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          const data = await response.json();
+          if (data.error === 'CONTACTO_NO_ENCONTRADO') {
+            // Redirigir a Perfil del Asegurado
+            window.top.location.href = 'https://polobroker.zohocreatorportal.com/#Perfil_usuario';
+            return;
+          }
+        }
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.success || !data.data) {
+        throw new Error('Respuesta inesperada del backend');
+      }
+
+      // Procesar pólizas (formato similar a buscarPolizas)
+      const polizasArray = (data.data.polizas || []).map(p => {
+        const companyKey = (p.companyName || '').toLowerCase().replace(/\s+/g, '');
+        const companyUrlMap = {
+          'mercantilandina': 'mercantil',
+          'provinciaseguros': 'provincia',
+          'sancorseguros': 'sancor',
+          'experta': 'experta'
+        };
+        const aseguradoraKey = companyUrlMap[companyKey] || companyKey;
+
+        return {
+          numero: p.numeroPoliza,
+          numeroConMetadata: p.numeroPoliza,
+          aseguradora: aseguradoraKey,
+          aseguradoraNombre: p.companyName,
+          tipo: p.tipo || '-',
+          descripcion: p.descripcion || '-',
+          cobertura: p.cobertura || null,
+          vigenciaDesde: p.vigencia?.fechaInicio || '-',
+          vigenciaHasta: p.vigencia?.fechaFin || '-',
+          certificateNumber: p.metadata?.certificateNumber || null,
+          bien: p.metadata?.bien || null,
+          estado: p.vigencia?.vigente ? 'vigente' : 'vencida'
+        };
+      });
+
+      setPolizasData(polizasArray);
+      if (polizasArray.length === 0) {
+        setNoResults(true);
+      }
+
+    } catch (err) {
+      setError('Error al cargar: ' + (err.message || 'Error desconocido'));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const buscarPolizas = async () => {
     if (!dni.trim()) {
@@ -643,26 +734,29 @@ function PolizasSection() {
             </p>
           </div>
 
-          <div className="controls">
-            <input
-              id="dni"
-              type="text"
-              placeholder="Ingrese su DNI"
-              value={dni}
-              onChange={(e) => setDni(e.target.value)}
-              onKeyPress={handleKeyPress}
-              disabled={loading}
-            />
+          {/* Mostrar input DNI solo si no hay email o si el usuario quiere buscar manualmente */}
+          {(!emailUsuario || polizasData.length === 0) && (
+            <div className="controls">
+              <input
+                id="dni"
+                type="text"
+                placeholder="Ingrese su DNI"
+                value={dni}
+                onChange={(e) => setDni(e.target.value)}
+                onKeyPress={handleKeyPress}
+                disabled={loading}
+              />
 
-            <button
-              id="btn-load"
-              className="btn-poliza"
-              onClick={buscarPolizas}
-              disabled={loading}
-            >
-              {loading ? <span className="spinner"></span> : 'Cargar pólizas'}
-            </button>
-          </div>
+              <button
+                id="btn-load"
+                className="btn-poliza"
+                onClick={buscarPolizas}
+                disabled={loading}
+              >
+                {loading ? <span className="spinner"></span> : 'Cargar pólizas'}
+              </button>
+            </div>
+          )}
 
           {polizasData.length > 0 && (
             <div className="filtros-wrapper">
@@ -688,9 +782,14 @@ function PolizasSection() {
           )}
 
           <div id="polizas-lista">
-            {!polizasData.length && !error && !loading && !noResults && (
+            {!polizasData.length && !error && !loading && !noResults && !emailUsuario && (
               <p style={{ textAlign: 'center', color: '#666' }}>
                 Ingrese su DNI y haga clic en "Cargar pólizas" para comenzar.
+              </p>
+            )}
+            {emailUsuario && loading && (
+              <p style={{ textAlign: 'center', color: '#666' }}>
+                Cargando tus pólizas...
               </p>
             )}
 
