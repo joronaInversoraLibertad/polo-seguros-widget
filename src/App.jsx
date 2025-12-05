@@ -360,6 +360,8 @@ function SiniestrosSection() {
 
 // Componente de Sección de Pólizas (código actual refactorizado)
 function PolizasSection() {
+  console.log('🔵 PolizasSection: Componente montado');
+  
   const [dni, setDni] = useState('');
   const [loading, setLoading] = useState(false);
   const [polizasData, setPolizasData] = useState([]);
@@ -376,6 +378,7 @@ function PolizasSection() {
 
   // Nueva función para buscar pólizas por email (definida antes del useEffect)
   const buscarPolizasPorEmail = async (email) => {
+    console.log('🔵 PolizasSection: buscarPolizasPorEmail llamado con email:', email);
     setLoading(true);
     setError(null);
     setPolizasData([]);
@@ -384,6 +387,7 @@ function PolizasSection() {
     setNoResults(false);
 
     try {
+      console.log('🔵 PolizasSection: Haciendo fetch a:', `${API_BASE}/polizas-buscar-por-email?email=${encodeURIComponent(email)}`);
       const response = await fetch(
         `${API_BASE}/polizas-buscar-por-email?email=${encodeURIComponent(email)}`, 
         {
@@ -463,18 +467,27 @@ function PolizasSection() {
 
   // Obtener email del usuario al cargar (desde parámetro URL)
   useEffect(() => {
+    console.log('🔵 PolizasSection: useEffect ejecutado');
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const email = urlParams.get('email');
+      console.log('🔵 PolizasSection: URL params:', {
+        email: email,
+        allParams: Object.fromEntries(urlParams.entries()),
+        fullURL: window.location.href
+      });
       
       if (email && email.trim()) {
+        console.log('🔵 PolizasSection: Email encontrado, buscando pólizas...');
         setEmailUsuario(email);
         // Cargar pólizas automáticamente por email
         buscarPolizasPorEmail(email.trim());
+      } else {
+        console.log('🔵 PolizasSection: No hay email, mostrando input DNI');
       }
       // Si no hay email, mantener comportamiento actual (mostrar input DNI)
     } catch (err) {
-      console.error('Error al obtener email de URL:', err);
+      console.error('❌ PolizasSection: Error al obtener email de URL:', err);
       // Continuar con el comportamiento normal (mostrar input DNI)
     }
   }, []);
@@ -926,12 +939,48 @@ function PolizasSection() {
 
 // Componente principal App
 function App() {
+  console.log('🟢 App: Componente montado');
+  console.log('🟢 App: Versión del código - FORZANDO POLIZAS');
+  
   // Detectar sección desde query parameters
   const urlParams = new URLSearchParams(window.location.search);
-  const section = urlParams.get('section') || 'escritorio';
+  let section = urlParams.get('section');
+  
+  console.log('🟢 App: section desde URL params:', section);
+  
+  // Si no hay parámetro section, intentar detectar desde el hash o contexto
+  if (!section) {
+    console.log('🟢 App: No hay section en URL params, intentando detectar...');
+    
+    // Si estamos en un iframe, puede que la sección esté en el hash del parent
+    try {
+      if (window.parent && window.parent !== window) {
+        const parentHash = window.parent.location.hash;
+        console.log('🟢 App: Parent hash:', parentHash);
+        if (parentHash && parentHash.includes('Polizas')) {
+          section = 'polizas';
+          console.log('🟢 App: Sección detectada desde parent hash:', section);
+        }
+      }
+    } catch (e) {
+      console.log('🟢 App: No se puede acceder al parent (normal en iframes con diferentes dominios):', e.message);
+    }
+    
+    // FORZAR 'polizas' por defecto cuando está embebido en Zoho Creator
+    // (si no hay parámetros, asumimos que es la página de Polizas)
+    if (!section) {
+      section = 'polizas'; // FORZAR polizas por defecto
+      console.log('🟢 App: ⚠️ FORZANDO sección a "polizas" (sin parámetros)');
+    }
+  }
+  
+  console.log('🟢 App: ✅ Sección FINAL detectada:', section);
+  console.log('🟢 App: URL completa:', window.location.href);
+  console.log('🟢 App: Todos los parámetros:', Object.fromEntries(urlParams.entries()));
 
   // Renderizar según la sección
   if (section === 'polizas') {
+    console.log('🟢 App: ✅✅✅ RENDERIZANDO PolizasSection ✅✅✅');
     return <PolizasSection />;
   }
 
