@@ -374,47 +374,7 @@ function PolizasSection() {
   const [emailUsuario, setEmailUsuario] = useState(null);
 
 
-  // Obtener email del usuario al cargar (desde parámetro URL)
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const email = urlParams.get('email');
-    
-    if (email) {
-      setEmailUsuario(email);
-      // Cargar pólizas automáticamente por email
-      buscarPolizasPorEmail(email);
-    }
-    // Si no hay email, mantener comportamiento actual (mostrar input DNI)
-  }, []);
-
-  // Aplicar filtros cuando cambien los datos o los filtros
-  useEffect(() => {
-    if (!polizasData.length) {
-      setPolizasFiltered([]);
-      return;
-    }
-
-    if (!filtroVigentes && !filtroNoVigentes) {
-      setPolizasFiltered([]);
-      return;
-    }
-
-    if (filtroVigentes && filtroNoVigentes) {
-      setPolizasFiltered(polizasData);
-      return;
-    }
-
-    const filtered = polizasData.filter(p => {
-      const esVigente = p.estado === 'vigente';
-      return (filtroVigentes && esVigente) || (filtroNoVigentes && !esVigente);
-    });
-
-    setPolizasFiltered(filtered);
-    setCurrentPage(1); // Reset a la primera página cuando cambien los filtros
-  }, [polizasData, filtroVigentes, filtroNoVigentes]);
-
-
-  // Nueva función para buscar pólizas por email
+  // Nueva función para buscar pólizas por email (definida antes del useEffect)
   const buscarPolizasPorEmail = async (email) => {
     setLoading(true);
     setError(null);
@@ -439,7 +399,16 @@ function PolizasSection() {
           const data = await response.json();
           if (data.error === 'CONTACTO_NO_ENCONTRADO') {
             // Redirigir a Perfil del Asegurado
-            window.top.location.href = 'https://polobroker.zohocreatorportal.com/#Perfil_usuario';
+            try {
+              if (window.top && window.top !== window) {
+                window.top.location.href = 'https://polobroker.zohocreatorportal.com/#Perfil_usuario';
+              } else {
+                window.location.href = 'https://polobroker.zohocreatorportal.com/#Perfil_usuario';
+              }
+            } catch (e) {
+              console.error('Error al redirigir:', e);
+              setError('No se encontró tu contacto. Por favor, completa tu perfil primero.');
+            }
             return;
           }
         }
@@ -485,11 +454,58 @@ function PolizasSection() {
       }
 
     } catch (err) {
+      console.error('Error al buscar pólizas por email:', err);
       setError('Error al cargar: ' + (err.message || 'Error desconocido'));
     } finally {
       setLoading(false);
     }
   };
+
+  // Obtener email del usuario al cargar (desde parámetro URL)
+  useEffect(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const email = urlParams.get('email');
+      
+      if (email && email.trim()) {
+        setEmailUsuario(email);
+        // Cargar pólizas automáticamente por email
+        buscarPolizasPorEmail(email.trim());
+      }
+      // Si no hay email, mantener comportamiento actual (mostrar input DNI)
+    } catch (err) {
+      console.error('Error al obtener email de URL:', err);
+      // Continuar con el comportamiento normal (mostrar input DNI)
+    }
+  }, []);
+
+  // Aplicar filtros cuando cambien los datos o los filtros
+  useEffect(() => {
+    if (!polizasData.length) {
+      setPolizasFiltered([]);
+      return;
+    }
+
+    if (!filtroVigentes && !filtroNoVigentes) {
+      setPolizasFiltered([]);
+      return;
+    }
+
+    if (filtroVigentes && filtroNoVigentes) {
+      setPolizasFiltered(polizasData);
+      return;
+    }
+
+    const filtered = polizasData.filter(p => {
+      const esVigente = p.estado === 'vigente';
+      return (filtroVigentes && esVigente) || (filtroNoVigentes && !esVigente);
+    });
+
+    setPolizasFiltered(filtered);
+    setCurrentPage(1); // Reset a la primera página cuando cambien los filtros
+  }, [polizasData, filtroVigentes, filtroNoVigentes]);
+
+
 
   const buscarPolizas = async () => {
     if (!dni.trim()) {
