@@ -474,15 +474,11 @@ function PolizasSection() {
     setPolizasFiltered([]);
     setResultado('');
     setNoResults(false);
-
+  
     try {
-      const url = `${API_BASE}/polizas-buscar-por-email?email=${encodeURIComponent(email)}`;
+      // URL CORREGIDA: usar hyper-action en lugar de polizas-buscar-por-email
+      const url = `${API_BASE}/hyper-action?email=${encodeURIComponent(email)}`;
       console.log('🔵 PolizasSection: Haciendo fetch a:', url);
-      console.log('🔵 PolizasSection: API_BASE:', API_BASE);
-      console.log('🔵 PolizasSection: Headers:', {
-        'apikey': API_KEY ? 'presente' : 'faltante',
-        'Authorization': API_KEY ? 'presente' : 'faltante'
-      });
       
       const response = await fetch(url, {
         headers: {
@@ -491,10 +487,10 @@ function PolizasSection() {
           'Content-Type': 'application/json'
         }
       });
-
+  
       console.log('🔵 PolizasSection: Response status:', response.status);
       console.log('🔵 PolizasSection: Response ok:', response.ok);
-
+  
       if (!response.ok) {
         let errorData = null;
         try {
@@ -523,22 +519,22 @@ function PolizasSection() {
         }
         throw new Error(`HTTP ${response.status}: ${errorData?.error || errorData?.message || 'Error desconocido'}`);
       }
-
+  
       const data = await response.json();
       console.log('🔵 PolizasSection: Response data:', data);
-
+  
       if (!data.success || !data.data) {
         throw new Error('Respuesta inesperada del backend');
       }
-
-      // Actualizar el estado del DNI si está disponible en la respuesta (solo para mostrar en el input)
+  
+      // Actualizar el estado del DNI si está disponible en la respuesta
       if (data.data.contacto && data.data.contacto.dni) {
         const dniObtenido = data.data.contacto.dni.toString().trim();
         console.log('🔵 PolizasSection: DNI obtenido de Supabase:', dniObtenido);
         setDni(dniObtenido);
       }
-
-      // Procesar pólizas (formato similar a buscarPolizas)
+  
+      // Procesar pólizas
       const polizasArray = (data.data.polizas || []).map(p => {
         const companyKey = (p.companyName || '').toLowerCase().replace(/\s+/g, '');
         const companyUrlMap = {
@@ -548,7 +544,7 @@ function PolizasSection() {
           'experta': 'experta'
         };
         const aseguradoraKey = companyUrlMap[companyKey] || companyKey;
-
+  
         return {
           numero: p.numeroPoliza,
           numeroConMetadata: p.numeroPoliza,
@@ -564,19 +560,15 @@ function PolizasSection() {
           estado: p.vigencia?.vigente ? 'vigente' : 'vencida'
         };
       });
-
+  
       setPolizasData(polizasArray);
       if (polizasArray.length === 0) {
         setNoResults(true);
       }
-
+  
     } catch (err) {
       console.error('❌ PolizasSection: Error al buscar pólizas por email:', err);
-      console.error('❌ PolizasSection: Error name:', err.name);
-      console.error('❌ PolizasSection: Error message:', err.message);
-      console.error('❌ PolizasSection: Error stack:', err.stack);
       
-      // Mensaje de error más descriptivo
       let errorMessage = 'Error al cargar';
       if (err.message.includes('Failed to fetch')) {
         errorMessage = 'Error de conexión. Verifica tu conexión a internet o que el servidor esté disponible.';
@@ -660,12 +652,20 @@ function PolizasSection() {
     
     // PRIORIDAD 1: Escuchar mensajes postMessage desde el parent (Zoho Creator)
     const messageHandler = (event) => {
+      console.log('🔵 PolizasSection: 📨 Mensaje recibido:', {
+        type: event.data?.type,
+        source: event.data?.source,
+        email: event.data?.email ? 'presente: ' + event.data.email : 'no presente',
+        origin: event.origin,
+        fullData: event.data
+      });
+      
       // Validar origen por seguridad (ajustar según tu dominio)
       if (event.data && event.data.type === 'POLO_WIDGET_EMAIL' && event.data.email) {
         const email = event.data.email.trim();
         // Validar que sea un email válido
         if (email && email.includes('@') && !emailObtenido) {
-          console.log('🔵 PolizasSection: Email recibido desde Creator via postMessage:', email);
+          console.log('🔵 PolizasSection: ✅✅✅ Email recibido desde Creator via postMessage:', email);
           emailObtenido = true;
           setEmailUsuario(email);
           buscarPolizasPorEmail(email);
@@ -674,18 +674,36 @@ function PolizasSection() {
     };
     
     window.addEventListener('message', messageHandler);
+    console.log('🔵 PolizasSection: ✅ Listener de postMessage configurado');
     
-    // Solicitar email al parent inmediatamente
+    // Solicitar email al parent inmediatamente y también después de delays
     if (window.parent && window.parent !== window) {
       try {
-        window.parent.postMessage({
+        const message = {
           type: 'POLO_WIDGET_REQUEST_EMAIL',
           source: 'polo-seguros-widget'
-        }, '*');
-        console.log('🔵 PolizasSection: Solicitando email al parent...');
+        };
+        
+        // Solicitar inmediatamente
+        window.parent.postMessage(message, '*');
+        console.log('🔵 PolizasSection: ✅ Solicitando email al parent (inmediato):', message);
+        
+        // Retry después de 500ms
+        setTimeout(() => {
+          window.parent.postMessage(message, '*');
+          console.log('🔵 PolizasSection: ✅ Solicitando email al parent (retry 500ms):', message);
+        }, 500);
+        
+        // Retry después de 2000ms
+        setTimeout(() => {
+          window.parent.postMessage(message, '*');
+          console.log('🔵 PolizasSection: ✅ Solicitando email al parent (retry 2000ms):', message);
+        }, 2000);
       } catch (e) {
         console.warn('⚠️ PolizasSection: Error al enviar postMessage:', e);
       }
+    } else {
+      console.warn('⚠️ PolizasSection: No hay window.parent disponible');
     }
     
     try {
