@@ -656,8 +656,40 @@ function PolizasSection() {
   useEffect(() => {
     console.log('🔵 PolizasSection: useEffect ejecutado');
     
+    let emailObtenido = false;
+    
+    // PRIORIDAD 1: Escuchar mensajes postMessage desde el parent (Zoho Creator)
+    const messageHandler = (event) => {
+      // Validar origen por seguridad (ajustar según tu dominio)
+      if (event.data && event.data.type === 'POLO_WIDGET_EMAIL' && event.data.email) {
+        const email = event.data.email.trim();
+        // Validar que sea un email válido
+        if (email && email.includes('@') && !emailObtenido) {
+          console.log('🔵 PolizasSection: Email recibido desde Creator via postMessage:', email);
+          emailObtenido = true;
+          setEmailUsuario(email);
+          buscarPolizasPorEmail(email);
+        }
+      }
+    };
+    
+    window.addEventListener('message', messageHandler);
+    
+    // Solicitar email al parent inmediatamente
+    if (window.parent && window.parent !== window) {
+      try {
+        window.parent.postMessage({
+          type: 'POLO_WIDGET_REQUEST_EMAIL',
+          source: 'polo-seguros-widget'
+        }, '*');
+        console.log('🔵 PolizasSection: Solicitando email al parent...');
+      } catch (e) {
+        console.warn('⚠️ PolizasSection: Error al enviar postMessage:', e);
+      }
+    }
+    
     try {
-      // PRIORIDAD 1: Intentar obtener email desde URL (si se pasa como parámetro)
+      // PRIORIDAD 2: Intentar obtener email desde URL (si se pasa como parámetro)
       const urlParams = new URLSearchParams(window.location.search);
       let email = urlParams.get('email');
       console.log('🔵 PolizasSection: URL params:', {
@@ -667,8 +699,9 @@ function PolizasSection() {
       });
       
       // Validar que el email no sea una variable sin resolver (como {{zoho.loginuserid}})
-      if (email && email.trim() && !email.includes('{{') && !email.includes('}}')) {
+      if (email && email.trim() && !email.includes('{{') && !email.includes('}}') && !emailObtenido) {
         console.log('🔵 PolizasSection: Email válido encontrado en URL, consultando Supabase...');
+        emailObtenido = true;
         setEmailUsuario(email.trim());
         buscarPolizasPorEmail(email.trim());
         return; // Salir temprano, ya estamos consultando Supabase
@@ -677,21 +710,32 @@ function PolizasSection() {
         email = null; // Ignorar email inválido
       }
 
-      // PRIORIDAD 2: Intentar obtener email desde el formulario de Zoho Creator
+      // PRIORIDAD 3: Intentar obtener email desde el formulario de Zoho Creator (fallback)
       const emailDesdeCreator = obtenerEmailDesdeCreator();
-      if (emailDesdeCreator && emailDesdeCreator.trim()) {
+      if (emailDesdeCreator && emailDesdeCreator.trim() && !emailObtenido) {
         console.log('🔵 PolizasSection: Email encontrado en formulario Creator, consultando Supabase...');
+        emailObtenido = true;
         setEmailUsuario(emailDesdeCreator.trim());
         buscarPolizasPorEmail(emailDesdeCreator.trim());
         return; // Salir temprano, ya estamos consultando Supabase
       }
 
-      // Si no hay email, mostrar input manual para ingresar DNI
-      console.log('🔵 PolizasSection: No hay email válido, mostrando input DNI para búsqueda manual');
+      // Si no hay email después de un tiempo, mostrar input manual para ingresar DNI
+      setTimeout(() => {
+        if (!emailObtenido) {
+          console.log('🔵 PolizasSection: No hay email válido después de esperar, mostrando input DNI para búsqueda manual');
+        }
+      }, 2000); // Esperar 2 segundos por si llega el email via postMessage
+      
     } catch (err) {
       console.error('❌ PolizasSection: Error al obtener datos:', err);
       // Continuar con el comportamiento normal (mostrar input DNI)
     }
+    
+    // Limpiar listener al desmontar
+    return () => {
+      window.removeEventListener('message', messageHandler);
+    };
   }, []);
 
   // Aplicar filtros cuando cambien los datos o los filtros
