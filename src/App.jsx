@@ -531,17 +531,11 @@ function PolizasSection() {
         throw new Error('Respuesta inesperada del backend');
       }
 
-      // Guardar DNI en localStorage si está disponible en la respuesta (para futuras cargas)
+      // Actualizar el estado del DNI si está disponible en la respuesta (solo para mostrar en el input)
       if (data.data.contacto && data.data.contacto.dni) {
-        try {
-          const dniObtenido = data.data.contacto.dni.toString().trim();
-          localStorage.setItem('pb_dni', dniObtenido);
-          console.log('🔵 PolizasSection: DNI obtenido de Supabase y guardado en localStorage:', dniObtenido);
-          // También actualizar el estado del DNI para mostrarlo en el input
-          setDni(dniObtenido);
-        } catch (e) {
-          console.warn('⚠️ PolizasSection: No se pudo guardar DNI en localStorage:', e);
-        }
+        const dniObtenido = data.data.contacto.dni.toString().trim();
+        console.log('🔵 PolizasSection: DNI obtenido de Supabase:', dniObtenido);
+        setDni(dniObtenido);
       }
 
       // Procesar pólizas (formato similar a buscarPolizas)
@@ -692,24 +686,8 @@ function PolizasSection() {
         return; // Salir temprano, ya estamos consultando Supabase
       }
 
-      // PRIORIDAD 3: Si no hay email, intentar usar DNI desde localStorage (fallback)
-      let dniDesdeStorage = null;
-      try {
-        dniDesdeStorage = localStorage.getItem('pb_dni');
-        console.log('🔵 PolizasSection: DNI desde localStorage:', dniDesdeStorage ? 'encontrado' : 'no encontrado');
-        if (dniDesdeStorage) {
-          dniDesdeStorage = dniDesdeStorage.trim();
-          console.log('🔵 PolizasSection: DNI encontrado en localStorage, buscando pólizas automáticamente...');
-          setDni(dniDesdeStorage);
-          buscarPolizasConDni(dniDesdeStorage);
-          return; // Salir temprano, ya tenemos DNI
-        }
-      } catch (storageError) {
-        console.warn('⚠️ PolizasSection: Error al leer localStorage:', storageError);
-      }
-
-      // Si no hay email ni DNI, mostrar input manual
-      console.log('🔵 PolizasSection: No hay email ni DNI válido, mostrando input DNI');
+      // Si no hay email, mostrar input manual para ingresar DNI
+      console.log('🔵 PolizasSection: No hay email válido, mostrando input DNI para búsqueda manual');
     } catch (err) {
       console.error('❌ PolizasSection: Error al obtener datos:', err);
       // Continuar con el comportamiento normal (mostrar input DNI)
