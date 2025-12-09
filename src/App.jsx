@@ -376,153 +376,10 @@ function PolizasSection() {
   const [emailUsuario, setEmailUsuario] = useState(null);
 
 
-  // Nueva función para buscar pólizas por email (definida antes del useEffect)
-  const buscarPolizasPorEmail = async (email) => {
-    console.log('🔵 PolizasSection: buscarPolizasPorEmail llamado con email:', email);
-    setLoading(true);
-    setError(null);
-    setPolizasData([]);
-    setPolizasFiltered([]);
-    setResultado('');
-    setNoResults(false);
-
-    try {
-      console.log('🔵 PolizasSection: Haciendo fetch a:', `${API_BASE}/polizas-buscar-por-email?email=${encodeURIComponent(email)}`);
-      const response = await fetch(
-        `${API_BASE}/polizas-buscar-por-email?email=${encodeURIComponent(email)}`, 
-        {
-          headers: {
-            'apikey': API_KEY,
-            'Authorization': `Bearer ${API_KEY}`
-          }
-        }
-      );
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          const data = await response.json();
-          if (data.error === 'CONTACTO_NO_ENCONTRADO') {
-            // Redirigir a Perfil del Asegurado
-            try {
-              if (window.top && window.top !== window) {
-                window.top.location.href = 'https://polobroker.zohocreatorportal.com/#Perfil_usuario';
-              } else {
-                window.location.href = 'https://polobroker.zohocreatorportal.com/#Perfil_usuario';
-              }
-            } catch (e) {
-              console.error('Error al redirigir:', e);
-              setError('No se encontró tu contacto. Por favor, completa tu perfil primero.');
-            }
-            return;
-          }
-        }
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (!data.success || !data.data) {
-        throw new Error('Respuesta inesperada del backend');
-      }
-
-      // Procesar pólizas (formato similar a buscarPolizas)
-      const polizasArray = (data.data.polizas || []).map(p => {
-        const companyKey = (p.companyName || '').toLowerCase().replace(/\s+/g, '');
-        const companyUrlMap = {
-          'mercantilandina': 'mercantil',
-          'provinciaseguros': 'provincia',
-          'sancorseguros': 'sancor',
-          'experta': 'experta'
-        };
-        const aseguradoraKey = companyUrlMap[companyKey] || companyKey;
-
-        return {
-          numero: p.numeroPoliza,
-          numeroConMetadata: p.numeroPoliza,
-          aseguradora: aseguradoraKey,
-          aseguradoraNombre: p.companyName,
-          tipo: p.tipo || '-',
-          descripcion: p.descripcion || '-',
-          cobertura: p.cobertura || null,
-          vigenciaDesde: p.vigencia?.fechaInicio || '-',
-          vigenciaHasta: p.vigencia?.fechaFin || '-',
-          certificateNumber: p.metadata?.certificateNumber || null,
-          bien: p.metadata?.bien || null,
-          estado: p.vigencia?.vigente ? 'vigente' : 'vencida'
-        };
-      });
-
-      setPolizasData(polizasArray);
-      if (polizasArray.length === 0) {
-        setNoResults(true);
-      }
-
-    } catch (err) {
-      console.error('Error al buscar pólizas por email:', err);
-      setError('Error al cargar: ' + (err.message || 'Error desconocido'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Obtener email del usuario al cargar (desde parámetro URL)
-  useEffect(() => {
-    console.log('🔵 PolizasSection: useEffect ejecutado');
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const email = urlParams.get('email');
-      console.log('🔵 PolizasSection: URL params:', {
-        email: email,
-        allParams: Object.fromEntries(urlParams.entries()),
-        fullURL: window.location.href
-      });
-      
-      if (email && email.trim()) {
-        console.log('🔵 PolizasSection: Email encontrado, buscando pólizas...');
-        setEmailUsuario(email);
-        // Cargar pólizas automáticamente por email
-        buscarPolizasPorEmail(email.trim());
-      } else {
-        console.log('🔵 PolizasSection: No hay email, mostrando input DNI');
-      }
-      // Si no hay email, mantener comportamiento actual (mostrar input DNI)
-    } catch (err) {
-      console.error('❌ PolizasSection: Error al obtener email de URL:', err);
-      // Continuar con el comportamiento normal (mostrar input DNI)
-    }
-  }, []);
-
-  // Aplicar filtros cuando cambien los datos o los filtros
-  useEffect(() => {
-    if (!polizasData.length) {
-      setPolizasFiltered([]);
-      return;
-    }
-
-    if (!filtroVigentes && !filtroNoVigentes) {
-      setPolizasFiltered([]);
-      return;
-    }
-
-    if (filtroVigentes && filtroNoVigentes) {
-      setPolizasFiltered(polizasData);
-      return;
-    }
-
-    const filtered = polizasData.filter(p => {
-      const esVigente = p.estado === 'vigente';
-      return (filtroVigentes && esVigente) || (filtroNoVigentes && !esVigente);
-    });
-
-    setPolizasFiltered(filtered);
-    setCurrentPage(1); // Reset a la primera página cuando cambien los filtros
-  }, [polizasData, filtroVigentes, filtroNoVigentes]);
-
-
-
-  const buscarPolizas = async () => {
-    if (!dni.trim()) {
-      alert('Por favor ingrese su DNI');
+  // Función auxiliar para buscar pólizas con DNI (definida antes del useEffect)
+  const buscarPolizasConDni = async (dniValue) => {
+    if (!dniValue || !dniValue.trim()) {
+      console.warn('⚠️ PolizasSection: buscarPolizasConDni llamado sin DNI válido');
       return;
     }
 
@@ -534,7 +391,7 @@ function PolizasSection() {
     setNoResults(false);
 
     try {
-      const response = await fetch(`${API_BASE}/polizas-buscar?dni=${dni.trim()}`, {
+      const response = await fetch(`${API_BASE}/polizas-buscar?dni=${dniValue.trim()}`, {
         headers: {
           'apikey': API_KEY,
           'Authorization': `Bearer ${API_KEY}`
@@ -601,10 +458,223 @@ function PolizasSection() {
       }
 
     } catch (err) {
+      console.error('❌ PolizasSection: Error al buscar pólizas con DNI:', err);
       setError('Error al cargar: ' + (err.message || 'Error desconocido'));
     } finally {
       setLoading(false);
     }
+  };
+
+  // Nueva función para buscar pólizas por email (definida antes del useEffect)
+  const buscarPolizasPorEmail = async (email) => {
+    console.log('🔵 PolizasSection: buscarPolizasPorEmail llamado con email:', email);
+    setLoading(true);
+    setError(null);
+    setPolizasData([]);
+    setPolizasFiltered([]);
+    setResultado('');
+    setNoResults(false);
+
+    try {
+      const url = `${API_BASE}/polizas-buscar-por-email?email=${encodeURIComponent(email)}`;
+      console.log('🔵 PolizasSection: Haciendo fetch a:', url);
+      console.log('🔵 PolizasSection: API_BASE:', API_BASE);
+      console.log('🔵 PolizasSection: Headers:', {
+        'apikey': API_KEY ? 'presente' : 'faltante',
+        'Authorization': API_KEY ? 'presente' : 'faltante'
+      });
+      
+      const response = await fetch(url, {
+        headers: {
+          'apikey': API_KEY,
+          'Authorization': `Bearer ${API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('🔵 PolizasSection: Response status:', response.status);
+      console.log('🔵 PolizasSection: Response ok:', response.ok);
+
+      if (!response.ok) {
+        let errorData = null;
+        try {
+          errorData = await response.json();
+          console.error('🔵 PolizasSection: Error response data:', errorData);
+        } catch (e) {
+          console.error('🔵 PolizasSection: No se pudo parsear error como JSON:', e);
+        }
+        
+        if (response.status === 404) {
+          if (errorData && errorData.error === 'CONTACTO_NO_ENCONTRADO') {
+            // Redirigir a Perfil del Asegurado
+            console.log('🔵 PolizasSection: Contacto no encontrado, redirigiendo...');
+            try {
+              if (window.top && window.top !== window) {
+                window.top.location.href = 'https://polobroker.zohocreatorportal.com/#Perfil_usuario';
+              } else {
+                window.location.href = 'https://polobroker.zohocreatorportal.com/#Perfil_usuario';
+              }
+            } catch (e) {
+              console.error('❌ PolizasSection: Error al redirigir:', e);
+              setError('No se encontró tu contacto. Por favor, completa tu perfil primero.');
+            }
+            return;
+          }
+        }
+        throw new Error(`HTTP ${response.status}: ${errorData?.error || errorData?.message || 'Error desconocido'}`);
+      }
+
+      const data = await response.json();
+      console.log('🔵 PolizasSection: Response data:', data);
+
+      if (!data.success || !data.data) {
+        throw new Error('Respuesta inesperada del backend');
+      }
+
+      // Procesar pólizas (formato similar a buscarPolizas)
+      const polizasArray = (data.data.polizas || []).map(p => {
+        const companyKey = (p.companyName || '').toLowerCase().replace(/\s+/g, '');
+        const companyUrlMap = {
+          'mercantilandina': 'mercantil',
+          'provinciaseguros': 'provincia',
+          'sancorseguros': 'sancor',
+          'experta': 'experta'
+        };
+        const aseguradoraKey = companyUrlMap[companyKey] || companyKey;
+
+        return {
+          numero: p.numeroPoliza,
+          numeroConMetadata: p.numeroPoliza,
+          aseguradora: aseguradoraKey,
+          aseguradoraNombre: p.companyName,
+          tipo: p.tipo || '-',
+          descripcion: p.descripcion || '-',
+          cobertura: p.cobertura || null,
+          vigenciaDesde: p.vigencia?.fechaInicio || '-',
+          vigenciaHasta: p.vigencia?.fechaFin || '-',
+          certificateNumber: p.metadata?.certificateNumber || null,
+          bien: p.metadata?.bien || null,
+          estado: p.vigencia?.vigente ? 'vigente' : 'vencida'
+        };
+      });
+
+      setPolizasData(polizasArray);
+      if (polizasArray.length === 0) {
+        setNoResults(true);
+      }
+
+    } catch (err) {
+      console.error('❌ PolizasSection: Error al buscar pólizas por email:', err);
+      console.error('❌ PolizasSection: Error name:', err.name);
+      console.error('❌ PolizasSection: Error message:', err.message);
+      console.error('❌ PolizasSection: Error stack:', err.stack);
+      
+      // Mensaje de error más descriptivo
+      let errorMessage = 'Error al cargar';
+      if (err.message.includes('Failed to fetch')) {
+        errorMessage = 'Error de conexión. Verifica tu conexión a internet o que el servidor esté disponible.';
+      } else if (err.message.includes('HTTP')) {
+        errorMessage = `Error del servidor: ${err.message}`;
+      } else {
+        errorMessage = `Error: ${err.message || 'Error desconocido'}`;
+      }
+      
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Obtener DNI desde localStorage o email desde URL al cargar
+  useEffect(() => {
+    console.log('🔵 PolizasSection: useEffect ejecutado');
+    try {
+      // PRIORIDAD 1: Intentar leer DNI desde localStorage (pb_dni)
+      let dniDesdeStorage = null;
+      try {
+        dniDesdeStorage = localStorage.getItem('pb_dni');
+        console.log('🔵 PolizasSection: DNI desde localStorage:', dniDesdeStorage ? 'encontrado' : 'no encontrado');
+        if (dniDesdeStorage) {
+          dniDesdeStorage = dniDesdeStorage.trim();
+          console.log('🔵 PolizasSection: DNI encontrado en localStorage:', dniDesdeStorage);
+        }
+      } catch (storageError) {
+        console.warn('⚠️ PolizasSection: Error al leer localStorage:', storageError);
+        // localStorage puede no estar disponible en algunos contextos (iframe, etc.)
+      }
+
+      // Si encontramos DNI en localStorage, usarlo para buscar pólizas automáticamente
+      if (dniDesdeStorage && dniDesdeStorage.length > 0) {
+        console.log('🔵 PolizasSection: DNI encontrado en localStorage, buscando pólizas automáticamente...');
+        setDni(dniDesdeStorage);
+        // Usar la función buscarPolizas con el DNI encontrado
+        buscarPolizasConDni(dniDesdeStorage);
+        return; // Salir temprano, ya tenemos DNI
+      }
+
+      // PRIORIDAD 2: Si no hay DNI en localStorage, intentar buscar por email desde URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const email = urlParams.get('email');
+      console.log('🔵 PolizasSection: URL params:', {
+        email: email,
+        allParams: Object.fromEntries(urlParams.entries()),
+        fullURL: window.location.href
+      });
+      
+      // Validar que el email no sea una variable sin resolver (como {{zoho.loginuserid}})
+      if (email && email.trim() && !email.includes('{{') && !email.includes('}}')) {
+        console.log('🔵 PolizasSection: Email válido encontrado, buscando pólizas...');
+        setEmailUsuario(email);
+        // Cargar pólizas automáticamente por email
+        buscarPolizasPorEmail(email.trim());
+      } else {
+        if (email && (email.includes('{{') || email.includes('}}'))) {
+          console.warn('⚠️ PolizasSection: Email contiene variable sin resolver:', email);
+        }
+        console.log('🔵 PolizasSection: No hay DNI ni email válido, mostrando input DNI');
+      }
+      // Si no hay DNI ni email, mantener comportamiento actual (mostrar input DNI)
+    } catch (err) {
+      console.error('❌ PolizasSection: Error al obtener datos:', err);
+      // Continuar con el comportamiento normal (mostrar input DNI)
+    }
+  }, []);
+
+  // Aplicar filtros cuando cambien los datos o los filtros
+  useEffect(() => {
+    if (!polizasData.length) {
+      setPolizasFiltered([]);
+      return;
+    }
+
+    if (!filtroVigentes && !filtroNoVigentes) {
+      setPolizasFiltered([]);
+      return;
+    }
+
+    if (filtroVigentes && filtroNoVigentes) {
+      setPolizasFiltered(polizasData);
+      return;
+    }
+
+    const filtered = polizasData.filter(p => {
+      const esVigente = p.estado === 'vigente';
+      return (filtroVigentes && esVigente) || (filtroNoVigentes && !esVigente);
+    });
+
+    setPolizasFiltered(filtered);
+    setCurrentPage(1); // Reset a la primera página cuando cambien los filtros
+  }, [polizasData, filtroVigentes, filtroNoVigentes]);
+
+
+
+  const buscarPolizas = async () => {
+    if (!dni.trim()) {
+      alert('Por favor ingrese su DNI');
+      return;
+    }
+    // Reutilizar la función buscarPolizasConDni
+    await buscarPolizasConDni(dni.trim());
   };
 
   const handleDocumentRequest = async ({ company, numero, tipo, certificateNumber, buttonKey }) => {
@@ -811,19 +881,27 @@ function PolizasSection() {
           )}
 
           <div id="polizas-lista">
-            {!polizasData.length && !error && !loading && !noResults && !emailUsuario && (
+            {loading && (
               <p style={{ textAlign: 'center', color: '#666' }}>
-                Ingrese su DNI y haga clic en "Cargar pólizas" para comenzar.
-              </p>
-            )}
-            {emailUsuario && loading && (
-              <p style={{ textAlign: 'center', color: '#666' }}>
-                Cargando tus pólizas...
+                {emailUsuario ? 'Cargando tus pólizas...' : 'Buscando pólizas...'}
               </p>
             )}
 
             {error && (
-              <p style={{ textAlign: 'center', color: '#c00' }}>{error}</p>
+              <div style={{ textAlign: 'center', color: '#c00', padding: '20px' }}>
+                <p style={{ marginBottom: '10px' }}>{error}</p>
+                {emailUsuario && (
+                  <p style={{ color: '#666', fontSize: '14px' }}>
+                    Puedes intentar buscar manualmente ingresando tu DNI.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {!polizasData.length && !error && !loading && !noResults && !emailUsuario && (
+              <p style={{ textAlign: 'center', color: '#666' }}>
+                Ingrese su DNI y haga clic en "Cargar pólizas" para comenzar.
+              </p>
             )}
 
             {polizasData.length > 0 && polizasFiltered.length === 0 && (
@@ -940,7 +1018,6 @@ function PolizasSection() {
 // Componente principal App
 function App() {
   console.log('🟢 App: Componente montado');
-  console.log('🟢 App: Versión del código - FORZANDO POLIZAS');
   
   // Detectar sección desde query parameters
   const urlParams = new URLSearchParams(window.location.search);
@@ -948,29 +1025,41 @@ function App() {
   
   console.log('🟢 App: section desde URL params:', section);
   
-  // Si no hay parámetro section, intentar detectar desde el hash o contexto
+  // Si no hay parámetro section, intentar detectar desde el hash del parent (Zoho Creator)
   if (!section) {
-    console.log('🟢 App: No hay section en URL params, intentando detectar...');
+    console.log('🟢 App: No hay section en URL params, intentando detectar desde parent...');
     
-    // Si estamos en un iframe, puede que la sección esté en el hash del parent
+    // Si estamos en un iframe, intentar detectar desde el hash del parent
     try {
       if (window.parent && window.parent !== window) {
         const parentHash = window.parent.location.hash;
+        const parentURL = window.parent.location.href;
+        console.log('🟢 App: Parent URL:', parentURL);
         console.log('🟢 App: Parent hash:', parentHash);
-        if (parentHash && parentHash.includes('Polizas')) {
+        
+        // Detectar sección desde el hash del parent (Zoho Creator usa #Page:NombrePagina)
+        if (parentHash && (parentHash.includes('Polizas') || parentHash.includes('Page:Polizas'))) {
           section = 'polizas';
-          console.log('🟢 App: Sección detectada desde parent hash:', section);
+          console.log('🟢 App: ✅ Sección detectada desde parent: POLIZAS');
+        } else if (parentHash && (parentHash.includes('Siniestro') || parentHash.includes('Page:Siniestro'))) {
+          section = 'siniestros';
+          console.log('🟢 App: ✅ Sección detectada desde parent: SINIESTROS');
+        } else if (parentHash && (parentHash.includes('Escritorio') || parentHash.includes('Page:Escritorio'))) {
+          section = 'escritorio';
+          console.log('🟢 App: ✅ Sección detectada desde parent: ESCRITORIO');
+        } else {
+          console.log('🟢 App: ⚠️ No se pudo detectar sección desde parent hash');
         }
       }
     } catch (e) {
-      console.log('🟢 App: No se puede acceder al parent (normal en iframes con diferentes dominios):', e.message);
+      console.log('🟢 App: ⚠️ No se puede acceder al parent (normal en iframes con diferentes dominios):', e.message);
+      console.log('🟢 App: Error completo:', e);
     }
     
-    // FORZAR 'polizas' por defecto cuando está embebido en Zoho Creator
-    // (si no hay parámetros, asumimos que es la página de Polizas)
+    // Si aún no hay sección, usar 'escritorio' por defecto (NO forzar polizas)
     if (!section) {
-      section = 'polizas'; // FORZAR polizas por defecto
-      console.log('🟢 App: ⚠️ FORZANDO sección a "polizas" (sin parámetros)');
+      section = 'escritorio'; // Por defecto: escritorio
+      console.log('🟢 App: ✅ Usando sección por defecto: ESCRITORIO (sin parámetros)');
     }
   }
   
