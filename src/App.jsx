@@ -531,6 +531,19 @@ function PolizasSection() {
         throw new Error('Respuesta inesperada del backend');
       }
 
+      // Guardar DNI en localStorage si está disponible en la respuesta (para futuras cargas)
+      if (data.data.contacto && data.data.contacto.dni) {
+        try {
+          const dniObtenido = data.data.contacto.dni.toString().trim();
+          localStorage.setItem('pb_dni', dniObtenido);
+          console.log('🔵 PolizasSection: DNI obtenido de Supabase y guardado en localStorage:', dniObtenido);
+          // También actualizar el estado del DNI para mostrarlo en el input
+          setDni(dniObtenido);
+        } catch (e) {
+          console.warn('⚠️ PolizasSection: No se pudo guardar DNI en localStorage:', e);
+        }
+      }
+
       // Procesar pólizas (formato similar a buscarPolizas)
       const polizasArray = (data.data.polizas || []).map(p => {
         const companyKey = (p.companyName || '').toLowerCase().replace(/\s+/g, '');
@@ -585,36 +598,74 @@ function PolizasSection() {
     }
   };
 
-  // Obtener DNI desde localStorage o email desde URL al cargar
+  // Función auxiliar para intentar leer Email desde el formulario de Zoho Creator
+  const obtenerEmailDesdeCreator = () => {
+    try {
+      // Intentar acceder al parent window (Zoho Creator)
+      if (window.parent && window.parent !== window) {
+        try {
+          const parentDoc = window.parent.document;
+          
+          // Buscar el campo Email en el formulario de Creator
+          const selectoresEmail = [
+            'input[name*="Email" i]',
+            'input[id*="Email" i]',
+            'input[name*="email" i]',
+            'input[id*="email" i]',
+            'input[type="email"]',
+            'input[data-field-name*="Email" i]',
+            'input[data-field-name*="email" i]',
+            // Selectores más específicos de Zoho Creator
+            'input.zc-field-input[name*="Email" i]',
+            'input.zc-field-input[id*="Email" i]',
+            'input.zc-field-input[type="email"]'
+          ];
+
+          for (const selector of selectoresEmail) {
+            try {
+              const campoEmail = parentDoc.querySelector(selector);
+              if (campoEmail && campoEmail.value && campoEmail.value.trim()) {
+                const emailValue = campoEmail.value.trim();
+                // Validar que sea un email válido
+                if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
+                  console.log('🔵 PolizasSection: Email encontrado en formulario Creator:', emailValue);
+                  return emailValue;
+                }
+              }
+            } catch (e) {
+              // Continuar con el siguiente selector
+            }
+          }
+
+          // Intentar buscar en todos los inputs de tipo email
+          const todosLosInputsEmail = parentDoc.querySelectorAll('input[type="email"]');
+          for (const input of todosLosInputsEmail) {
+            const value = input.value ? input.value.trim() : '';
+            if (value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+              console.log('🔵 PolizasSection: Email encontrado en formulario Creator (input type="email"):', value);
+              return value;
+            }
+          }
+        } catch (parentError) {
+          // En iframes con diferentes dominios, no podemos acceder al DOM del parent
+          // Esto es normal y esperado por políticas de seguridad del navegador
+          console.log('🔵 PolizasSection: No se puede acceder al parent document (cross-origin iframe)');
+        }
+      }
+    } catch (err) {
+      console.warn('⚠️ PolizasSection: Error al intentar leer Email desde Creator:', err);
+    }
+    return null;
+  };
+
+  // Obtener email del usuario para consultar Supabase directamente (obtiene DNI y pólizas)
   useEffect(() => {
     console.log('🔵 PolizasSection: useEffect ejecutado');
+    
     try {
-      // PRIORIDAD 1: Intentar leer DNI desde localStorage (pb_dni)
-      let dniDesdeStorage = null;
-      try {
-        dniDesdeStorage = localStorage.getItem('pb_dni');
-        console.log('🔵 PolizasSection: DNI desde localStorage:', dniDesdeStorage ? 'encontrado' : 'no encontrado');
-        if (dniDesdeStorage) {
-          dniDesdeStorage = dniDesdeStorage.trim();
-          console.log('🔵 PolizasSection: DNI encontrado en localStorage:', dniDesdeStorage);
-        }
-      } catch (storageError) {
-        console.warn('⚠️ PolizasSection: Error al leer localStorage:', storageError);
-        // localStorage puede no estar disponible en algunos contextos (iframe, etc.)
-      }
-
-      // Si encontramos DNI en localStorage, usarlo para buscar pólizas automáticamente
-      if (dniDesdeStorage && dniDesdeStorage.length > 0) {
-        console.log('🔵 PolizasSection: DNI encontrado en localStorage, buscando pólizas automáticamente...');
-        setDni(dniDesdeStorage);
-        // Usar la función buscarPolizas con el DNI encontrado
-        buscarPolizasConDni(dniDesdeStorage);
-        return; // Salir temprano, ya tenemos DNI
-      }
-
-      // PRIORIDAD 2: Si no hay DNI en localStorage, intentar buscar por email desde URL
+      // PRIORIDAD 1: Intentar obtener email desde URL (si se pasa como parámetro)
       const urlParams = new URLSearchParams(window.location.search);
-      const email = urlParams.get('email');
+      let email = urlParams.get('email');
       console.log('🔵 PolizasSection: URL params:', {
         email: email,
         allParams: Object.fromEntries(urlParams.entries()),
@@ -623,17 +674,42 @@ function PolizasSection() {
       
       // Validar que el email no sea una variable sin resolver (como {{zoho.loginuserid}})
       if (email && email.trim() && !email.includes('{{') && !email.includes('}}')) {
-        console.log('🔵 PolizasSection: Email válido encontrado, buscando pólizas...');
-        setEmailUsuario(email);
-        // Cargar pólizas automáticamente por email
+        console.log('🔵 PolizasSection: Email válido encontrado en URL, consultando Supabase...');
+        setEmailUsuario(email.trim());
         buscarPolizasPorEmail(email.trim());
-      } else {
-        if (email && (email.includes('{{') || email.includes('}}'))) {
-          console.warn('⚠️ PolizasSection: Email contiene variable sin resolver:', email);
-        }
-        console.log('🔵 PolizasSection: No hay DNI ni email válido, mostrando input DNI');
+        return; // Salir temprano, ya estamos consultando Supabase
+      } else if (email && (email.includes('{{') || email.includes('}}'))) {
+        console.warn('⚠️ PolizasSection: Email contiene variable sin resolver:', email);
+        email = null; // Ignorar email inválido
       }
-      // Si no hay DNI ni email, mantener comportamiento actual (mostrar input DNI)
+
+      // PRIORIDAD 2: Intentar obtener email desde el formulario de Zoho Creator
+      const emailDesdeCreator = obtenerEmailDesdeCreator();
+      if (emailDesdeCreator && emailDesdeCreator.trim()) {
+        console.log('🔵 PolizasSection: Email encontrado en formulario Creator, consultando Supabase...');
+        setEmailUsuario(emailDesdeCreator.trim());
+        buscarPolizasPorEmail(emailDesdeCreator.trim());
+        return; // Salir temprano, ya estamos consultando Supabase
+      }
+
+      // PRIORIDAD 3: Si no hay email, intentar usar DNI desde localStorage (fallback)
+      let dniDesdeStorage = null;
+      try {
+        dniDesdeStorage = localStorage.getItem('pb_dni');
+        console.log('🔵 PolizasSection: DNI desde localStorage:', dniDesdeStorage ? 'encontrado' : 'no encontrado');
+        if (dniDesdeStorage) {
+          dniDesdeStorage = dniDesdeStorage.trim();
+          console.log('🔵 PolizasSection: DNI encontrado en localStorage, buscando pólizas automáticamente...');
+          setDni(dniDesdeStorage);
+          buscarPolizasConDni(dniDesdeStorage);
+          return; // Salir temprano, ya tenemos DNI
+        }
+      } catch (storageError) {
+        console.warn('⚠️ PolizasSection: Error al leer localStorage:', storageError);
+      }
+
+      // Si no hay email ni DNI, mostrar input manual
+      console.log('🔵 PolizasSection: No hay email ni DNI válido, mostrando input DNI');
     } catch (err) {
       console.error('❌ PolizasSection: Error al obtener datos:', err);
       // Continuar con el comportamiento normal (mostrar input DNI)
