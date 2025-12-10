@@ -51,7 +51,7 @@ const navegarASeccion = (seccion) => {
       }
     }
   }
-  
+
   // Para otras secciones o fallback, usar la navegación normal
   try {
     const url = new URL(window.location.href);
@@ -239,7 +239,7 @@ function SiniestrosSection() {
 // Componente de Sección de Pólizas (código actual refactorizado)
 function PolizasSection() {
   console.log('🔵 PolizasSection: Componente montado');
-  
+
   const [dni, setDni] = useState('');
   const [loading, setLoading] = useState(false);
   const [polizasData, setPolizasData] = useState([]);
@@ -352,12 +352,12 @@ function PolizasSection() {
     setPolizasFiltered([]);
     setResultado('');
     setNoResults(false);
-  
+
     try {
       // URL CORREGIDA: usar hyper-action en lugar de polizas-buscar-por-email
       const url = `${API_BASE}/hyper-action?email=${encodeURIComponent(email)}`;
       console.log('🔵 PolizasSection: Haciendo fetch a:', url);
-      
+
       const response = await fetch(url, {
         headers: {
           'apikey': API_KEY,
@@ -365,10 +365,10 @@ function PolizasSection() {
           'Content-Type': 'application/json'
         }
       });
-  
+
       console.log('🔵 PolizasSection: Response status:', response.status);
       console.log('🔵 PolizasSection: Response ok:', response.ok);
-  
+
       if (!response.ok) {
         let errorData = null;
         try {
@@ -377,7 +377,7 @@ function PolizasSection() {
         } catch (e) {
           console.error('🔵 PolizasSection: No se pudo parsear error como JSON:', e);
         }
-        
+
         if (response.status === 404) {
           if (errorData && errorData.error === 'CONTACTO_NO_ENCONTRADO') {
             // Redirigir a Perfil del Asegurado
@@ -397,21 +397,21 @@ function PolizasSection() {
         }
         throw new Error(`HTTP ${response.status}: ${errorData?.error || errorData?.message || 'Error desconocido'}`);
       }
-  
+
       const data = await response.json();
       console.log('🔵 PolizasSection: Response data:', data);
-  
+
       if (!data.success || !data.data) {
         throw new Error('Respuesta inesperada del backend');
       }
-  
+
       // Actualizar el estado del DNI si está disponible en la respuesta
       if (data.data.contacto && data.data.contacto.dni) {
         const dniObtenido = data.data.contacto.dni.toString().trim();
         console.log('🔵 PolizasSection: DNI obtenido de Supabase:', dniObtenido);
         setDni(dniObtenido);
       }
-  
+
       // Procesar pólizas
       const polizasArray = (data.data.polizas || []).map(p => {
         const companyKey = (p.companyName || '').toLowerCase().replace(/\s+/g, '');
@@ -422,7 +422,7 @@ function PolizasSection() {
           'experta': 'experta'
         };
         const aseguradoraKey = companyUrlMap[companyKey] || companyKey;
-  
+
         return {
           numero: p.numeroPoliza,
           numeroConMetadata: p.numeroPoliza,
@@ -438,15 +438,15 @@ function PolizasSection() {
           estado: p.vigencia?.vigente ? 'vigente' : 'vencida'
         };
       });
-  
+
       setPolizasData(polizasArray);
       if (polizasArray.length === 0) {
         setNoResults(true);
       }
-  
+
     } catch (err) {
       console.error('❌ PolizasSection: Error al buscar pólizas por email:', err);
-      
+
       let errorMessage = 'Error al cargar';
       if (err.message.includes('Failed to fetch')) {
         errorMessage = 'Error de conexión. Verifica tu conexión a internet o que el servidor esté disponible.';
@@ -455,7 +455,7 @@ function PolizasSection() {
       } else {
         errorMessage = `Error: ${err.message || 'Error desconocido'}`;
       }
-      
+
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -469,7 +469,7 @@ function PolizasSection() {
       if (window.parent && window.parent !== window) {
         try {
           const parentDoc = window.parent.document;
-          
+
           // Buscar el campo Email en el formulario de Creator
           const selectoresEmail = [
             'input[name*="Email" i]',
@@ -525,9 +525,9 @@ function PolizasSection() {
   // Obtener email del usuario para consultar Supabase directamente (obtiene DNI y pólizas)
   useEffect(() => {
     console.log('🔵 PolizasSection: useEffect ejecutado');
-    
+
     let emailObtenido = false;
-    
+
     // PRIORIDAD 1: Escuchar mensajes postMessage desde el parent (Zoho Creator)
     const messageHandler = (event) => {
       console.log('🔵 PolizasSection: 📨 Mensaje recibido:', {
@@ -537,7 +537,7 @@ function PolizasSection() {
         origin: event.origin,
         fullData: event.data
       });
-      
+
       // Validar origen por seguridad (ajustar según tu dominio)
       if (event.data && event.data.type === 'POLO_WIDGET_EMAIL' && event.data.email) {
         const email = event.data.email.trim();
@@ -550,10 +550,10 @@ function PolizasSection() {
         }
       }
     };
-    
+
     window.addEventListener('message', messageHandler);
     console.log('🔵 PolizasSection: ✅ Listener de postMessage configurado');
-    
+
     // Solicitar email al parent inmediatamente y también después de delays
     if (window.parent && window.parent !== window) {
       try {
@@ -561,17 +561,17 @@ function PolizasSection() {
           type: 'POLO_WIDGET_REQUEST_EMAIL',
           source: 'polo-seguros-widget'
         };
-        
+
         // Solicitar inmediatamente
         window.parent.postMessage(message, '*');
         console.log('🔵 PolizasSection: ✅ Solicitando email al parent (inmediato):', message);
-        
+
         // Retry después de 500ms
         setTimeout(() => {
           window.parent.postMessage(message, '*');
           console.log('🔵 PolizasSection: ✅ Solicitando email al parent (retry 500ms):', message);
         }, 500);
-        
+
         // Retry después de 2000ms
         setTimeout(() => {
           window.parent.postMessage(message, '*');
@@ -583,7 +583,7 @@ function PolizasSection() {
     } else {
       console.warn('⚠️ PolizasSection: No hay window.parent disponible');
     }
-    
+
     try {
       // PRIORIDAD 2: Intentar obtener email desde URL (si se pasa como parámetro)
       const urlParams = new URLSearchParams(window.location.search);
@@ -593,16 +593,29 @@ function PolizasSection() {
         allParams: Object.fromEntries(urlParams.entries()),
         fullURL: window.location.href
       });
-      
-      // Validar que el email no sea una variable sin resolver (como {{zoho.loginuserid}})
-      if (email && email.trim() && !email.includes('{{') && !email.includes('}}') && !emailObtenido) {
+
+      // Validar que el email no sea una variable sin resolver
+      // Detectar patrones de variables de Zoho Creator: {{...}}, ${...}, #Page_Parameter...#, etc.
+      const esVariableSinResolver = email && (
+        email.includes('{{') ||
+        email.includes('}}') ||
+        email.includes('${') ||
+        email.includes('#Page_Parameter') ||
+        (email.includes('#') && email.includes('_')) // Otros patrones de Zoho
+      );
+
+      // Validar formato de email válido
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const esEmailValido = email && emailRegex.test(email.trim());
+
+      if (esEmailValido && !esVariableSinResolver && !emailObtenido) {
         console.log('🔵 PolizasSection: Email válido encontrado en URL, consultando Supabase...');
         emailObtenido = true;
         setEmailUsuario(email.trim());
         buscarPolizasPorEmail(email.trim());
         return; // Salir temprano, ya estamos consultando Supabase
-      } else if (email && (email.includes('{{') || email.includes('}}'))) {
-        console.warn('⚠️ PolizasSection: Email contiene variable sin resolver:', email);
+      } else if (email && (esVariableSinResolver || !esEmailValido)) {
+        console.warn('⚠️ PolizasSection: Email inválido o variable sin resolver:', email);
         email = null; // Ignorar email inválido
       }
 
@@ -622,12 +635,12 @@ function PolizasSection() {
           console.log('🔵 PolizasSection: No hay email válido después de esperar, mostrando input DNI para búsqueda manual');
         }
       }, 2000); // Esperar 2 segundos por si llega el email via postMessage
-      
+
     } catch (err) {
       console.error('❌ PolizasSection: Error al obtener datos:', err);
       // Continuar con el comportamiento normal (mostrar input DNI)
     }
-    
+
     // Limpiar listener al desmontar
     return () => {
       window.removeEventListener('message', messageHandler);
@@ -1012,17 +1025,17 @@ function PolizasSection() {
 // Componente principal App
 function App() {
   console.log('🟢 App: Componente montado');
-  
+
   // Detectar sección desde query parameters
   const urlParams = new URLSearchParams(window.location.search);
   let section = urlParams.get('section');
-  
+
   console.log('🟢 App: section desde URL params:', section);
-  
+
   // Si no hay parámetro section, intentar detectar desde el hash del parent (Zoho Creator)
   if (!section) {
     console.log('🟢 App: No hay section en URL params, intentando detectar desde parent...');
-    
+
     // Si estamos en un iframe, intentar detectar desde el hash del parent
     try {
       if (window.parent && window.parent !== window) {
@@ -1030,7 +1043,7 @@ function App() {
         const parentURL = window.parent.location.href;
         console.log('🟢 App: Parent URL:', parentURL);
         console.log('🟢 App: Parent hash:', parentHash);
-        
+
         // Detectar sección desde el hash del parent (Zoho Creator usa #Page:NombrePagina)
         if (parentHash && (parentHash.includes('Polizas') || parentHash.includes('Page:Polizas'))) {
           section = 'polizas';
@@ -1049,14 +1062,14 @@ function App() {
       console.log('🟢 App: ⚠️ No se puede acceder al parent (normal en iframes con diferentes dominios):', e.message);
       console.log('🟢 App: Error completo:', e);
     }
-    
+
     // Si aún no hay sección, usar 'escritorio' por defecto (NO forzar polizas)
     if (!section) {
       section = 'escritorio'; // Por defecto: escritorio
       console.log('🟢 App: ✅ Usando sección por defecto: ESCRITORIO (sin parámetros)');
     }
   }
-  
+
   console.log('🟢 App: ✅ Sección FINAL detectada:', section);
   console.log('🟢 App: URL completa:', window.location.href);
   console.log('🟢 App: Todos los parámetros:', Object.fromEntries(urlParams.entries()));
