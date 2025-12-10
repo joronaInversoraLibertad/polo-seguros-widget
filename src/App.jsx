@@ -39,16 +39,27 @@ function AccesoCard({ href, icon, title, text, ctaText, onClick }) {
 
 // Componente de Sección de Escritorio
 const navegarASeccion = (seccion) => {
-  // Si la sección es "polizas", llamar a la función de Zoho Creator
+  // Si la sección es "polizas", redirigir directamente a la página de Polizas en Zoho Creator
   if (seccion === 'polizas') {
-    // Intentar llamar a la función en el parent (Zoho Creator)
+    // Redirigir directamente a la página de Polizas en Zoho Creator
     if (window.parent && window.parent !== window) {
       try {
-        window.parent.location.href = '#Script:redirectPolizasConEmail';
+        window.parent.location.href = 'https://polobroker.zohocreatorportal.com/#Page:Polizas';
         return;
       } catch (e) {
         console.warn('No se pudo redirigir via parent:', e);
+        // Fallback: intentar con window.top
+        try {
+          window.top.location.href = 'https://polobroker.zohocreatorportal.com/#Page:Polizas';
+          return;
+        } catch (e2) {
+          console.warn('No se pudo redirigir via top:', e2);
+        }
       }
+    } else {
+      // Si no hay parent, redirigir directamente
+      window.location.href = 'https://polobroker.zohocreatorportal.com/#Page:Polizas';
+      return;
     }
   }
 
