@@ -39,26 +39,34 @@ function AccesoCard({ href, icon, title, text, ctaText, onClick }) {
 
 // Componente de Sección de Escritorio
 const navegarASeccion = (seccion) => {
+  console.log('🟢 navegarASeccion: Sección solicitada:', seccion);
+  
   // Si la sección es "polizas", redirigir directamente a la página de Polizas en Zoho Creator
   if (seccion === 'polizas') {
+    console.log('🟢 navegarASeccion: Redirigiendo a página de Polizas en Zoho Creator');
+    const targetUrl = 'https://polobroker.zohocreatorportal.com/#Page:Polizas';
+    
     // Redirigir directamente a la página de Polizas en Zoho Creator
     if (window.parent && window.parent !== window) {
       try {
-        window.parent.location.href = 'https://polobroker.zohocreatorportal.com/#Page:Polizas';
+        console.log('🟢 navegarASeccion: Intentando redirigir via window.parent');
+        window.parent.location.href = targetUrl;
         return;
       } catch (e) {
-        console.warn('No se pudo redirigir via parent:', e);
+        console.warn('⚠️ navegarASeccion: No se pudo redirigir via parent:', e);
         // Fallback: intentar con window.top
         try {
-          window.top.location.href = 'https://polobroker.zohocreatorportal.com/#Page:Polizas';
+          console.log('🟢 navegarASeccion: Intentando redirigir via window.top');
+          window.top.location.href = targetUrl;
           return;
         } catch (e2) {
-          console.warn('No se pudo redirigir via top:', e2);
+          console.warn('⚠️ navegarASeccion: No se pudo redirigir via top:', e2);
         }
       }
     } else {
       // Si no hay parent, redirigir directamente
-      window.location.href = 'https://polobroker.zohocreatorportal.com/#Page:Polizas';
+      console.log('🟢 navegarASeccion: No hay parent, redirigiendo directamente');
+      window.location.href = targetUrl;
       return;
     }
   }
@@ -79,12 +87,15 @@ function EscritorioSection() {
   // Datos de las cards de acceso rápido
   const accesosRapidos = [
     {
-      href: "?section=polizas",
+      href: "#",
       icon: "fas fa-file-contract",
       title: "Ver mis pólizas",
       text: "Consultá las pólizas vigentes, coberturas, sumas aseguradas y vencimientos.",
       ctaText: "Ver detalle",
-      onClick: () => navegarASeccion('polizas')
+      onClick: () => {
+        console.log('🟢 EscritorioSection: Click en "Ver mis pólizas", llamando navegarASeccion("polizas")');
+        navegarASeccion('polizas');
+      }
     },
     {
       href: "?section=siniestros",
