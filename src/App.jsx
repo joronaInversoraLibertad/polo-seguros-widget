@@ -877,7 +877,32 @@ function PolizasSection() {
       }
 
       setResultado('');
-      window.open(docUrl, '_blank');
+      
+      // Si es un data URI (base64), convertir a Blob URL para evitar problemas con URIs largos
+      // Esto solo afecta a Provincia que devuelve base64, Sancor usa URLs HTTP normales
+      if (docUrl.startsWith('data:application/pdf;base64,')) {
+        try {
+          const base64Data = docUrl.split(',')[1];
+          const byteCharacters = atob(base64Data);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: 'application/pdf' });
+          const blobUrl = URL.createObjectURL(blob);
+          window.open(blobUrl, '_blank');
+          // Limpiar la URL del objeto después de un tiempo (opcional, el navegador lo hace automáticamente)
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+        } catch (error) {
+          console.error('Error al convertir base64 a Blob:', error);
+          // Fallback: intentar abrir el data URI directamente
+          window.open(docUrl, '_blank');
+        }
+      } else {
+        // Para URLs HTTP normales (Sancor): usar directamente
+        window.open(docUrl, '_blank');
+      }
     } catch (err) {
       setResultado('Error: ' + (err.message || 'Error inesperado'));
     } finally {
