@@ -804,12 +804,36 @@ function PolizasSection() {
       let email = urlParams.get('email');
       let crmId = urlParams.get('crm_id') || urlParams.get('crmId') || urlParams.get('id');
       
+      // Si crm_id no está en los query params, puede estar en el hash (Zoho Creator a veces pone variables en el hash)
+      // O puede estar en la URL completa como parte del query string que fue mal parseado
+      if (!crmId) {
+        // Intentar extraer crm_id de la URL completa manualmente (antes del hash)
+        const fullURL = window.location.href;
+        const urlWithoutHash = fullURL.split('#')[0]; // Quitar el hash para parsear correctamente
+        const urlObj = new URL(urlWithoutHash);
+        crmId = urlObj.searchParams.get('crm_id') || urlObj.searchParams.get('crmId') || urlObj.searchParams.get('id');
+        
+        // Si aún no está, verificar si está en el hash (puede ser que Zoho lo ponga ahí)
+        if (!crmId && window.location.hash) {
+          const hashMatch = window.location.hash.match(/crm_id[=:]([^&#]+)/i);
+          if (hashMatch && hashMatch[1]) {
+            crmId = decodeURIComponent(hashMatch[1]);
+            console.log('🔵 PolizasSection: CRM_ID extraído del hash:', crmId);
+          }
+        }
+        
+        if (crmId) {
+          console.log('🔵 PolizasSection: CRM_ID extraído manualmente de URL:', crmId);
+        }
+      }
+      
       console.log('🔵 PolizasSection: URL params:', {
         email: email,
         crm_id: crmId,
         allParams: Object.fromEntries(urlParams.entries()),
         fullURL: window.location.href,
-        hash: window.location.hash
+        hash: window.location.hash,
+        search: window.location.search
       });
       
       // DEBUG: Verificar si hay variables de Zoho Creator en el hash o URL
