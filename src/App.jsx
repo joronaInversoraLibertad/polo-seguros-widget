@@ -805,20 +805,32 @@ function PolizasSection() {
       let crmId = urlParams.get('crm_id') || urlParams.get('crmId') || urlParams.get('id');
       
       // Si crm_id no está en los query params, puede estar en el hash (Zoho Creator a veces pone variables en el hash)
-      // O puede estar en la URL completa como parte del query string que fue mal parseado
+      // Esto pasa cuando Zoho genera: ?crm_id=#Page_Parameter.ID# y el navegador interpreta el # como hash
       if (!crmId) {
-        // Intentar extraer crm_id de la URL completa manualmente (antes del hash)
+        // Caso 1: Intentar extraer de la URL completa antes del hash
         const fullURL = window.location.href;
         const urlWithoutHash = fullURL.split('#')[0]; // Quitar el hash para parsear correctamente
         const urlObj = new URL(urlWithoutHash);
         crmId = urlObj.searchParams.get('crm_id') || urlObj.searchParams.get('crmId') || urlObj.searchParams.get('id');
         
-        // Si aún no está, verificar si está en el hash (puede ser que Zoho lo ponga ahí)
+        // Caso 2: Si el hash contiene #Page_Parameter.ID_de_Contacto#, significa que el crm_id estaba ahí
+        // En este caso, el valor real NO está disponible (es una variable sin resolver)
+        // Pero podemos detectarlo y loguearlo
         if (!crmId && window.location.hash) {
-          const hashMatch = window.location.hash.match(/crm_id[=:]([^&#]+)/i);
-          if (hashMatch && hashMatch[1]) {
-            crmId = decodeURIComponent(hashMatch[1]);
-            console.log('🔵 PolizasSection: CRM_ID extraído del hash:', crmId);
+          const hash = window.location.hash;
+          // Si el hash es una variable de Zoho Creator sin resolver
+          if (hash.includes('#Page_Parameter') || hash.includes('#Contactos')) {
+            console.warn('⚠️ PolizasSection: CRM_ID está en el hash como variable sin resolver:', hash);
+            console.log('🔵 PolizasSection: Zoho Creator no resolvió la variable, mostrando input DNI');
+            // No intentar extraer, es una variable sin resolver
+            crmId = null;
+          } else {
+            // Si el hash tiene otro formato, intentar extraer
+            const hashMatch = hash.match(/crm_id[=:]([^&#]+)/i);
+            if (hashMatch && hashMatch[1]) {
+              crmId = decodeURIComponent(hashMatch[1]);
+              console.log('🔵 PolizasSection: CRM_ID extraído del hash:', crmId);
+            }
           }
         }
         
