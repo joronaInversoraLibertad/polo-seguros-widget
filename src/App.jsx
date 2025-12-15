@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 
+// Deploy: Actualización para forzar nuevo hash
+
 const API_BASE = 'https://xisazrvyvezhaymelmyq.supabase.co/functions/v1';
 const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhpc2F6cnZ5dmV6aGF5bWVsbXlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM2NjI3MjQsImV4cCI6MjA3OTIzODcyNH0.TBehcHxWUVoamO3mwmfV6ncDD_6QUEA9I2D5Xp4IFXE';
 
@@ -836,6 +838,7 @@ function PolizasSection() {
           const crmIdNum = parseInt(crmId, 10);
           if (!isNaN(crmIdNum) && crmIdNum > 0) {
             console.log('🔵 PolizasSection: ✅ CRM_ID válido encontrado en URL:', crmIdNum);
+            console.log('🔵 PolizasSection: Iniciando búsqueda de pólizas por crm_id...');
             crmIdObtenido = true;
             buscarPolizasPorCrmId(crmIdNum);
             return; // Salir temprano, ya estamos consultando por crm_id
