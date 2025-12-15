@@ -500,9 +500,9 @@ function PolizasSection() {
     }
   };
 
-  // Nueva función para buscar pólizas por email (definida antes del useEffect)
-  const buscarPolizasPorEmail = async (email) => {
-    console.log('🔵 PolizasSection: buscarPolizasPorEmail llamado con email:', email);
+  // Función para buscar pólizas por crm_id (ID de Contacto de Zoho CRM)
+  const buscarPolizasPorCrmId = async (crmId) => {
+    console.log('🔵 PolizasSection: buscarPolizasPorCrmId llamado con crm_id:', crmId);
     setLoading(true);
     setError(null);
     setPolizasData([]);
@@ -511,8 +511,7 @@ function PolizasSection() {
     setNoResults(false);
 
     try {
-      // URL CORREGIDA: usar hyper-action en lugar de polizas-buscar-por-email
-      const url = `${API_BASE}/hyper-action?email=${encodeURIComponent(email)}`;
+      const url = `${API_BASE}/polizas-buscar-por-crm-id?crm_id=${encodeURIComponent(crmId)}`;
       console.log('🔵 PolizasSection: Haciendo fetch a:', url);
 
       const response = await fetch(url, {
@@ -602,7 +601,7 @@ function PolizasSection() {
       }
 
     } catch (err) {
-      console.error('❌ PolizasSection: Error al buscar pólizas por email:', err);
+      console.error('❌ PolizasSection: Error al buscar pólizas por crm_id:', err);
 
       let errorMessage = 'Error al cargar';
       if (err.message.includes('Failed to fetch')) {
@@ -679,11 +678,11 @@ function PolizasSection() {
     return null;
   };
 
-  // Obtener email del usuario para consultar Supabase directamente (obtiene DNI y pólizas)
+  // Obtener crm_id del usuario para consultar Supabase directamente (obtiene DNI y pólizas)
   useEffect(() => {
     console.log('🔵 PolizasSection: useEffect ejecutado');
 
-    let emailObtenido = false;
+    let crmIdObtenido = false;
 
     // PRIORIDAD 1: Escuchar mensajes postMessage desde el parent (Zoho Creator)
     const messageHandler = (event) => {
@@ -703,23 +702,21 @@ function PolizasSection() {
         console.log('🔍 PolizasSection: Valores completos de event.data:', JSON.stringify(event.data, null, 2));
       }
 
-      // Validar origen por seguridad (ajustar según tu dominio)
+      // NOTA: La búsqueda por email NO funciona en Zoho Creator, por lo que se omite
+      // Si llega un email, solo lo logueamos pero no lo usamos para buscar pólizas
       if (event.data && event.data.type === 'POLO_WIDGET_EMAIL' && event.data.email) {
         const email = event.data.email.trim();
-        // Validar que sea un email válido
-        if (email && email.includes('@') && !emailObtenido) {
-          console.log('🔵 PolizasSection: ✅✅✅ Email recibido desde Creator via postMessage:', email);
-          emailObtenido = true;
-          setEmailUsuario(email);
-          buscarPolizasPorEmail(email);
-        }
+        console.log('🔵 PolizasSection: Email recibido desde Creator (NO se usa para búsqueda):', email);
+        // No usar email para búsqueda porque no funciona en Zoho Creator
       }
 
-      // Intentar obtener crm_id si está disponible
+      // Intentar obtener crm_id si está disponible (PRIORIDAD ALTA - usar esto en lugar de email)
       if (event.data && (event.data.crm_id || event.data.id || event.data.CRM_ID)) {
         const crmId = event.data.crm_id || event.data.id || event.data.CRM_ID;
         console.log('🔵 PolizasSection: ✅✅✅ CRM_ID recibido desde Creator via postMessage:', crmId);
-        // TODO: Implementar búsqueda por crm_id cuando esté listo el endpoint
+        // Buscar pólizas por crm_id inmediatamente
+        buscarPolizasPorCrmId(crmId);
+        return; // Salir temprano, ya estamos consultando por crm_id
       }
     };
 
@@ -820,47 +817,41 @@ function PolizasSection() {
         pathname: window.location.pathname
       });
 
-      // Validar que el email no sea una variable sin resolver
-      // Detectar patrones de variables de Zoho Creator: {{...}}, ${...}, #Page_Parameter...#, etc.
-      const esVariableSinResolver = email && (
-        email.includes('{{') ||
-        email.includes('}}') ||
-        email.includes('${') ||
-        email.includes('#Page_Parameter') ||
-        (email.includes('#') && email.includes('_')) // Otros patrones de Zoho
-      );
-
-      // Validar formato de email válido
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const esEmailValido = email && emailRegex.test(email.trim());
-
-      if (esEmailValido && !esVariableSinResolver && !emailObtenido) {
-        console.log('🔵 PolizasSection: Email válido encontrado en URL, consultando Supabase...');
-        emailObtenido = true;
-        setEmailUsuario(email.trim());
-        buscarPolizasPorEmail(email.trim());
-        return; // Salir temprano, ya estamos consultando Supabase
-      } else if (email && (esVariableSinResolver || !esEmailValido)) {
-        console.warn('⚠️ PolizasSection: Email inválido o variable sin resolver:', email);
-        email = null; // Ignorar email inválido
-      }
-
-      // PRIORIDAD 3: Intentar obtener email desde el formulario de Zoho Creator (fallback)
-      const emailDesdeCreator = obtenerEmailDesdeCreator();
-      if (emailDesdeCreator && emailDesdeCreator.trim() && !emailObtenido) {
-        console.log('🔵 PolizasSection: Email encontrado en formulario Creator, consultando Supabase...');
-        emailObtenido = true;
-        setEmailUsuario(emailDesdeCreator.trim());
-        buscarPolizasPorEmail(emailDesdeCreator.trim());
-        return; // Salir temprano, ya estamos consultando Supabase
-      }
-
-      // Si no hay email después de un tiempo, mostrar input manual para ingresar DNI
-      setTimeout(() => {
-        if (!emailObtenido) {
-          console.log('🔵 PolizasSection: No hay email válido después de esperar, mostrando input DNI para búsqueda manual');
+      // PRIORIDAD 2A: Si hay crm_id en la URL, usarlo inmediatamente (más confiable que email)
+      if (crmId && !crmIdObtenido) {
+        // Detectar si es una variable de Zoho Creator sin resolver
+        const esVariableSinResolver = crmId.includes('{{') || 
+                                      crmId.includes('}}') || 
+                                      crmId.includes('${') || 
+                                      crmId.includes('#Page_Parameter') || 
+                                      crmId.includes('#Contactos') ||
+                                      (crmId.includes('#') && crmId.includes('_'));
+        
+        if (esVariableSinResolver) {
+          console.warn('⚠️ PolizasSection: CRM_ID es una variable de Zoho Creator sin resolver:', crmId);
+          console.log('🔵 PolizasSection: Esperando a que Zoho Creator resuelva la variable o mostrando input DNI');
+          // No hacer nada, mostrar input DNI
+        } else {
+          // Validar que crm_id sea un número válido
+          const crmIdNum = parseInt(crmId, 10);
+          if (!isNaN(crmIdNum) && crmIdNum > 0) {
+            console.log('🔵 PolizasSection: ✅ CRM_ID válido encontrado en URL:', crmIdNum);
+            crmIdObtenido = true;
+            buscarPolizasPorCrmId(crmIdNum);
+            return; // Salir temprano, ya estamos consultando por crm_id
+          } else {
+            console.warn('⚠️ PolizasSection: CRM_ID inválido en URL (no es un número):', crmId);
+          }
         }
-      }, 2000); // Esperar 2 segundos por si llega el email via postMessage
+      }
+
+      // NOTA: La búsqueda por email NO funciona en Zoho Creator, por lo que se omite
+      // Si no hay crm_id, mostrar input manual para ingresar DNI
+      setTimeout(() => {
+        if (!crmIdObtenido && !crmId) {
+          console.log('🔵 PolizasSection: No hay crm_id disponible, mostrando input DNI para búsqueda manual');
+        }
+      }, 2000); // Esperar 2 segundos por si llega el crm_id via postMessage
 
     } catch (err) {
       console.error('❌ PolizasSection: Error al obtener datos:', err);
