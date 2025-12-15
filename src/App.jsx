@@ -691,9 +691,17 @@ function PolizasSection() {
         type: event.data?.type,
         source: event.data?.source,
         email: event.data?.email ? 'presente: ' + event.data.email : 'no presente',
+        crm_id: event.data?.crm_id ? 'presente: ' + event.data.crm_id : 'no presente',
+        id: event.data?.id ? 'presente: ' + event.data.id : 'no presente',
         origin: event.origin,
         fullData: event.data
       });
+
+      // Loggear TODOS los campos disponibles para debugging
+      if (event.data && typeof event.data === 'object') {
+        console.log('🔍 PolizasSection: Todos los campos disponibles en event.data:', Object.keys(event.data));
+        console.log('🔍 PolizasSection: Valores completos de event.data:', JSON.stringify(event.data, null, 2));
+      }
 
       // Validar origen por seguridad (ajustar según tu dominio)
       if (event.data && event.data.type === 'POLO_WIDGET_EMAIL' && event.data.email) {
@@ -706,33 +714,50 @@ function PolizasSection() {
           buscarPolizasPorEmail(email);
         }
       }
+
+      // Intentar obtener crm_id si está disponible
+      if (event.data && (event.data.crm_id || event.data.id || event.data.CRM_ID)) {
+        const crmId = event.data.crm_id || event.data.id || event.data.CRM_ID;
+        console.log('🔵 PolizasSection: ✅✅✅ CRM_ID recibido desde Creator via postMessage:', crmId);
+        // TODO: Implementar búsqueda por crm_id cuando esté listo el endpoint
+      }
     };
 
     window.addEventListener('message', messageHandler);
     console.log('🔵 PolizasSection: ✅ Listener de postMessage configurado');
 
-    // Solicitar email al parent inmediatamente y también después de delays
+    // Solicitar email y crm_id al parent inmediatamente y también después de delays
     if (window.parent && window.parent !== window) {
       try {
-        const message = {
+        // Solicitar email
+        const messageEmail = {
           type: 'POLO_WIDGET_REQUEST_EMAIL',
           source: 'polo-seguros-widget'
         };
 
-        // Solicitar inmediatamente
-        window.parent.postMessage(message, '*');
-        console.log('🔵 PolizasSection: ✅ Solicitando email al parent (inmediato):', message);
+        // Solicitar crm_id también
+        const messageCrmId = {
+          type: 'POLO_WIDGET_REQUEST_CRM_ID',
+          source: 'polo-seguros-widget'
+        };
+
+        // Solicitar ambos inmediatamente
+        window.parent.postMessage(messageEmail, '*');
+        window.parent.postMessage(messageCrmId, '*');
+        console.log('🔵 PolizasSection: ✅ Solicitando email y crm_id al parent (inmediato):', { messageEmail, messageCrmId });
 
         // Retry después de 500ms
         setTimeout(() => {
-          window.parent.postMessage(message, '*');
-          console.log('🔵 PolizasSection: ✅ Solicitando email al parent (retry 500ms):', message);
+          window.parent.postMessage(messageEmail, '*');
+          window.parent.postMessage(messageCrmId, '*');
+          console.log('🔵 PolizasSection: ✅ Solicitando email y crm_id al parent (retry 500ms)');
         }, 500);
 
         // Retry después de 2000ms
         setTimeout(() => {
-          window.parent.postMessage(message, '*');
-          console.log('🔵 PolizasSection: ✅ Solicitando email al parent (retry 2000ms):', message);
+          window.parent.postMessage(messageEmail, '*');
+          window.parent.postMessage(messageCrmId, '*');
+          console.log('🔵 PolizasSection: ✅ Solicitando email y crm_id al parent (retry 2000ms)');
         }, 2000);
       } catch (e) {
         console.warn('⚠️ PolizasSection: Error al enviar postMessage:', e);
@@ -741,14 +766,58 @@ function PolizasSection() {
       console.warn('⚠️ PolizasSection: No hay window.parent disponible');
     }
 
+    // DEBUG: Intentar acceder a variables de Zoho Creator directamente
     try {
-      // PRIORIDAD 2: Intentar obtener email desde URL (si se pasa como parámetro)
+      console.log('🔍 PolizasSection: Intentando acceder a variables de Zoho Creator...');
+      if (window.parent && window.parent !== window) {
+        // Intentar acceder a variables comunes de Zoho Creator
+        const posiblesVariables = [
+          'zoho',
+          'Zoho',
+          'ZOHO',
+          'creator',
+          'Creator',
+          'currentUser',
+          'CurrentUser',
+          'user',
+          'User',
+          'session',
+          'Session'
+        ];
+        
+        posiblesVariables.forEach(varName => {
+          try {
+            if (window.parent[varName]) {
+              console.log(`🔍 PolizasSection: Variable ${varName} encontrada:`, window.parent[varName]);
+            }
+          } catch (e) {
+            // Ignorar errores de acceso
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('⚠️ PolizasSection: Error al intentar acceder a variables de Zoho:', err);
+    }
+
+    try {
+      // PRIORIDAD 2: Intentar obtener email y crm_id desde URL (si se pasa como parámetro)
       const urlParams = new URLSearchParams(window.location.search);
       let email = urlParams.get('email');
+      let crmId = urlParams.get('crm_id') || urlParams.get('crmId') || urlParams.get('id');
+      
       console.log('🔵 PolizasSection: URL params:', {
         email: email,
+        crm_id: crmId,
         allParams: Object.fromEntries(urlParams.entries()),
-        fullURL: window.location.href
+        fullURL: window.location.href,
+        hash: window.location.hash
+      });
+      
+      // DEBUG: Verificar si hay variables de Zoho Creator en el hash o URL
+      console.log('🔍 PolizasSection: Analizando hash y URL para variables de Zoho:', {
+        hash: window.location.hash,
+        search: window.location.search,
+        pathname: window.location.pathname
       });
 
       // Validar que el email no sea una variable sin resolver
