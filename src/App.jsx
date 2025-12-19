@@ -1113,9 +1113,12 @@ function PolizasSection() {
     <div className="pb-portal">
       <div className="pb-portal__wrapper">
         <div className="pb-polizas" id="polizas-container">
-          <h1 className="pb-hero__title">Mis Pólizas</h1>
-
-          <div className="pb-polizas__content">
+          <div className="pb-hero__text">
+            <div className="pb-hero__eyebrow">
+              <i className="fas fa-file-contract"></i>
+              <span>Portal de Mis Pólizas</span>
+            </div>
+            <h1 className="pb-hero__title">Pólizas Polo Conecta</h1>
             <p className="pb-hero__subtitle">
               En este sector podés ver tus pólizas y descargar los documentos.
             </p>

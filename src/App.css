@@ -76,37 +76,65 @@ body {
 }
 
 /* === SECCIÓN DE PÓLIZAS === */
-/* Los estilos están en las clases compartidas arriba */
+/* Estilos actualizados para coincidir con Escritorio y Siniestro */
 
 .poliza-card {
-  padding: 20px;
-  border: 2px solid #0073aa;
-  border-radius: 8px;
-  margin-bottom: 25px;
-  background: #f9f9f9;
-  transition: all 0.3s;
+  position: relative;
+  background: #FFFFFF;
+  border-radius: var(--pb-radius-lg, 18px);
+  padding: 18px 16px 16px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
 .poliza-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 115, 170, 0.15);
+  transform: translateY(-4px);
+  border-color: rgba(0, 99, 176, 0.6);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
 }
 
 .poliza-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 15px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
   gap: 12px;
 }
 
+.poliza-header h3 {
+  margin: 0 0 6px 0 !important;
+  color: var(--pb-primary-dark, #003864) !important;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.poliza-header p {
+  margin: 0 !important;
+  color: var(--pb-text-muted, #6B7280) !important;
+  font-size: 13px !important;
+}
+
 .poliza-info {
   margin-bottom: 20px;
-  padding: 15px;
-  background: white;
-  border-radius: 6px;
-  border-left: 4px solid #a3cb64;
-  justify-items: center;
+  padding: 16px;
+  background: var(--pb-bg-soft, #F4F7FB);
+  border-radius: 12px;
+  border-left: 3px solid var(--pb-accent, #00A0B0);
+}
+
+.poliza-info p {
+  margin: 8px 0 !important;
+  font-size: 13px !important;
+  color: var(--pb-text-main, #1F2933);
+  line-height: 1.6;
+}
+
+.poliza-info p strong {
+  color: var(--pb-primary-dark, #003864);
+  font-weight: 600;
 }
 
 .poliza-botones {
@@ -116,20 +144,21 @@ body {
 }
 
 .btn-poliza {
-  padding: 12px 16px;
+  padding: 10px 16px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 700;
-  transition: all 0.3s;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.18s ease;
   color: #fff;
-  background: #00a0fc;
+  background: linear-gradient(135deg, #0063B0, #00A0B0);
+  box-shadow: 0 2px 8px rgba(0, 99, 176, 0.2);
 }
 
 .btn-poliza:hover {
-  opacity: 0.9;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 99, 176, 0.3);
 }
 
 .btn-poliza.loading,
@@ -157,21 +186,25 @@ body {
 }
 
 .badge-vigente {
-  background: #d4edda;
-  color: #155724;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 700;
+  background: rgba(0, 163, 189, 0.12);
+  color: var(--pb-accent, #00A0B0);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .badge-vencida {
-  background: #f8d7da;
-  color: #721c24;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 700;
+  background: rgba(239, 68, 68, 0.12);
+  color: #DC2626;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .small {
@@ -198,12 +231,22 @@ body {
 }
 
 .controls input {
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
   min-width: 200px;
   display: inline-flex;
   align-items: center;
+  font-size: 14px;
+  color: var(--pb-text-main, #1F2933);
+  background: #FFFFFF;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.controls input:focus {
+  outline: none;
+  border-color: var(--pb-primary, #0063B0);
+  box-shadow: 0 0 0 3px rgba(0, 99, 176, 0.1);
 }
 
 .controls .btn-poliza {
@@ -214,7 +257,8 @@ body {
 }
 
 #btn-load {
-  background: #00a0fc;
+  background: linear-gradient(135deg, #0063B0, #00A0B0) !important;
+  box-shadow: 0 2px 8px rgba(0, 99, 176, 0.2);
 }
 
 .note {
@@ -225,12 +269,19 @@ body {
 }
 
 #resultado-global {
-  margin-top: 20px;
-  padding: 15px;
-  background: #e8f5e9;
-  border-radius: 6px;
-  border-left: 4px solid #28a745;
+  margin-top: 24px;
+  padding: 16px 18px;
+  background: var(--pb-bg-soft, #F4F7FB);
+  border-radius: 12px;
+  border-left: 3px solid var(--pb-accent, #00A0B0);
   display: none;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+#resultado-global strong {
+  color: var(--pb-primary-dark, #003864);
+  font-weight: 600;
+  font-size: 14px;
 }
 
 #polizas-pagination {
@@ -248,8 +299,9 @@ body {
 }
 
 #polizas-pagination .page-info {
-  font-size: 14px;
-  color: #333;
+  font-size: 13px;
+  color: var(--pb-text-main, #1F2933);
+  font-weight: 500;
 }
 
 #polizas-pagination .btn-poliza {
@@ -257,28 +309,34 @@ body {
 }
 
 .contacto-sin-polizas {
-  margin-top: 20px;
+  margin-top: 24px;
   text-align: center;
-  background: #f0f4ff;
-  padding: 18px;
-  border-radius: 10px;
-  border: 1px solid #c7d7ff;
+  background: var(--pb-bg-soft, #F4F7FB);
+  padding: 20px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
 .contacto-sin-polizas p {
-  font-size: 15px;
-  color: #1f3b70;
+  font-size: 14px;
+  color: var(--pb-text-main, #1F2933);
   margin: 0;
-  font-weight: 600;
+  font-weight: 500;
+  line-height: 1.6;
 }
 
 .contacto-sin-polizas a {
-  color: #0073aa;
-  text-decoration: underline;
+  color: var(--pb-primary, #0063B0);
+  text-decoration: none;
+  font-weight: 600;
+  border-bottom: 1px solid var(--pb-primary, #0063B0);
+  transition: color 0.18s ease;
 }
 
 .contacto-sin-polizas a:hover {
-  color: #005a87;
+  color: var(--pb-accent, #00A0B0);
+  border-bottom-color: var(--pb-accent, #00A0B0);
 }
 
 .filtros-wrapper {
@@ -366,7 +424,14 @@ body {
   padding: 48px 40px;
   box-shadow: var(--pb-shadow-soft);
   border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.pb-section-card {
   text-align: center;
+}
+
+.pb-polizas {
+  text-align: left;
 }
 
 .pb-section-card .pb-hero__title,
@@ -384,6 +449,12 @@ body {
 .pb-section-card__content .pb-hero__subtitle,
 .pb-polizas__content .pb-hero__subtitle {
   margin-bottom: 16px;
+  max-width: 100%;
+}
+
+/* Contenedor de texto para Polizas (alineado a la izquierda como Siniestros) */
+.pb-polizas .pb-hero__text {
+  text-align: left;
   max-width: 100%;
 }
 
