@@ -76,7 +76,7 @@ body {
 }
 
 /* === SECCIÓN DE PÓLIZAS === */
-/* Estilos actualizados para coincidir con Escritorio y Siniestro */
+/* Cards de pólizas con estilo moderno (como Escritorio/Siniestro) */
 
 .poliza-card {
   position: relative;
@@ -117,12 +117,14 @@ body {
   font-size: 13px !important;
 }
 
+
 .poliza-info {
   margin-bottom: 20px;
   padding: 16px;
   background: var(--pb-bg-soft, #F4F7FB);
   border-radius: 12px;
   border-left: 3px solid var(--pb-accent, #00A0B0);
+  text-align: center;
 }
 
 .poliza-info p {
@@ -369,19 +371,19 @@ body {
   min-width: 20px;
   margin-right: 8px;
   cursor: pointer;
-  accent-color: rgb(163, 203, 100);
+  accent-color: #0063B0;
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  border: 2px solid rgb(163, 203, 100);
+  border: 2px solid #0063B0;
   border-radius: 3px;
   position: relative;
   flex-shrink: 0;
 }
 
 .filtros-estado input[type="checkbox"]:checked {
-  background-color: rgb(163, 203, 100);
-  border-color: rgb(163, 203, 100);
+  background-color: #0063B0;
+  border-color: #0063B0;
 }
 
 .filtros-estado input[type="checkbox"]:checked::after {
