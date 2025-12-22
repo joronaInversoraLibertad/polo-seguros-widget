@@ -411,6 +411,7 @@ function PolizasSection() {
   const [loadingButtons, setLoadingButtons] = useState({});
   const [noResults, setNoResults] = useState(false);
   const [emailUsuario, setEmailUsuario] = useState(null);
+  const [dniObtenidoDesdeCrmId, setDniObtenidoDesdeCrmId] = useState(false); // Indica si el DNI vino de crm_id
 
 
   // Función auxiliar para buscar pólizas con DNI (definida antes del useEffect)
@@ -422,6 +423,7 @@ function PolizasSection() {
 
     setLoading(true);
     setError(null);
+    setDniObtenidoDesdeCrmId(false); // Si busca manualmente, el DNI no viene de crm_id
     setPolizasData([]);
     setPolizasFiltered([]);
     setResultado('');
@@ -538,7 +540,7 @@ function PolizasSection() {
 
         if (response.status === 404) {
           if (errorData && errorData.error === 'CONTACTO_NO_ENCONTRADO') {
-            // Redirigir a Perfil del Asegurado
+            // Redirigir a Perfil del Asegurado solo si realmente no existe el contacto
             console.log('🔵 PolizasSection: Contacto no encontrado, redirigiendo...');
             try {
               if (window.top && window.top !== window) {
@@ -559,6 +561,18 @@ function PolizasSection() {
       const data = await response.json();
       console.log('🔵 PolizasSection: Response data:', data);
 
+      // Si el contacto existe pero no tiene DNI, permitir búsqueda manual
+      if (data.contacto_sin_dni) {
+        console.log('🔵 PolizasSection: Contacto existe pero sin DNI, permitiendo búsqueda manual');
+        setDni('');
+        setDniObtenidoDesdeCrmId(false);
+        setPolizasData([]);
+        setPolizasFiltered([]);
+        setNoResults(false);
+        setLoading(false);
+        return; // Salir temprano, permitir búsqueda manual
+      }
+
       if (!data.success || !data.data) {
         throw new Error('Respuesta inesperada del backend');
       }
@@ -568,6 +582,7 @@ function PolizasSection() {
         const dniObtenido = data.data.contacto.dni.toString().trim();
         console.log('🔵 PolizasSection: DNI obtenido de Supabase:', dniObtenido);
         setDni(dniObtenido);
+        setDniObtenidoDesdeCrmId(true); // Marcar que el DNI vino de crm_id (no editable)
       }
 
       // Procesar pólizas
@@ -688,115 +703,18 @@ function PolizasSection() {
 
     // PRIORIDAD 1: Escuchar mensajes postMessage desde el parent (Zoho Creator)
     const messageHandler = (event) => {
-      console.log('🔵 PolizasSection: 📨 Mensaje recibido:', {
-        type: event.data?.type,
-        source: event.data?.source,
-        email: event.data?.email ? 'presente: ' + event.data.email : 'no presente',
-        crm_id: event.data?.crm_id ? 'presente: ' + event.data.crm_id : 'no presente',
-        id: event.data?.id ? 'presente: ' + event.data.id : 'no presente',
-        origin: event.origin,
-        fullData: event.data
-      });
-
-      // Loggear TODOS los campos disponibles para debugging
-      if (event.data && typeof event.data === 'object') {
-        console.log('🔍 PolizasSection: Todos los campos disponibles en event.data:', Object.keys(event.data));
-        console.log('🔍 PolizasSection: Valores completos de event.data:', JSON.stringify(event.data, null, 2));
-      }
-
-      // NOTA: La búsqueda por email NO funciona en Zoho Creator, por lo que se omite
-      // Si llega un email, solo lo logueamos pero no lo usamos para buscar pólizas
-      if (event.data && event.data.type === 'POLO_WIDGET_EMAIL' && event.data.email) {
-        const email = event.data.email.trim();
-        console.log('🔵 PolizasSection: Email recibido desde Creator (NO se usa para búsqueda):', email);
-        // No usar email para búsqueda porque no funciona en Zoho Creator
-      }
-
-      // Intentar obtener crm_id si está disponible (PRIORIDAD ALTA - usar esto en lugar de email)
+      // Intentar obtener crm_id si está disponible
       if (event.data && (event.data.crm_id || event.data.id || event.data.CRM_ID)) {
         const crmId = event.data.crm_id || event.data.id || event.data.CRM_ID;
-        console.log('🔵 PolizasSection: ✅✅✅ CRM_ID recibido desde Creator via postMessage:', crmId);
+        console.log('✅ PolizasSection: CRM_ID recibido via postMessage:', crmId);
         // Buscar pólizas por crm_id inmediatamente
         buscarPolizasPorCrmId(crmId);
-        return; // Salir temprano, ya estamos consultando por crm_id
+        return;
       }
     };
 
     window.addEventListener('message', messageHandler);
     console.log('🔵 PolizasSection: ✅ Listener de postMessage configurado');
-
-    // Solicitar email y crm_id al parent inmediatamente y también después de delays
-    if (window.parent && window.parent !== window) {
-      try {
-        // Solicitar email
-        const messageEmail = {
-          type: 'POLO_WIDGET_REQUEST_EMAIL',
-          source: 'polo-seguros-widget'
-        };
-
-        // Solicitar crm_id también
-        const messageCrmId = {
-          type: 'POLO_WIDGET_REQUEST_CRM_ID',
-          source: 'polo-seguros-widget'
-        };
-
-        // Solicitar ambos inmediatamente
-        window.parent.postMessage(messageEmail, '*');
-        window.parent.postMessage(messageCrmId, '*');
-        console.log('🔵 PolizasSection: ✅ Solicitando email y crm_id al parent (inmediato):', { messageEmail, messageCrmId });
-
-        // Retry después de 500ms
-        setTimeout(() => {
-          window.parent.postMessage(messageEmail, '*');
-          window.parent.postMessage(messageCrmId, '*');
-          console.log('🔵 PolizasSection: ✅ Solicitando email y crm_id al parent (retry 500ms)');
-        }, 500);
-
-        // Retry después de 2000ms
-        setTimeout(() => {
-          window.parent.postMessage(messageEmail, '*');
-          window.parent.postMessage(messageCrmId, '*');
-          console.log('🔵 PolizasSection: ✅ Solicitando email y crm_id al parent (retry 2000ms)');
-        }, 2000);
-      } catch (e) {
-        console.warn('⚠️ PolizasSection: Error al enviar postMessage:', e);
-      }
-    } else {
-      console.warn('⚠️ PolizasSection: No hay window.parent disponible');
-    }
-
-    // DEBUG: Intentar acceder a variables de Zoho Creator directamente
-    try {
-      console.log('🔍 PolizasSection: Intentando acceder a variables de Zoho Creator...');
-      if (window.parent && window.parent !== window) {
-        // Intentar acceder a variables comunes de Zoho Creator
-        const posiblesVariables = [
-          'zoho',
-          'Zoho',
-          'ZOHO',
-          'creator',
-          'Creator',
-          'currentUser',
-          'CurrentUser',
-          'user',
-          'User',
-          'session',
-          'Session'
-        ];
-        
-        posiblesVariables.forEach(varName => {
-          try {
-            if (window.parent[varName]) {
-              console.log(`🔍 PolizasSection: Variable ${varName} encontrada:`, window.parent[varName]);
-            }
-          } catch (e) {
-            // Ignorar errores de acceso
-          }
-        });
-      }
-    } catch (err) {
-      console.warn('⚠️ PolizasSection: Error al intentar acceder a variables de Zoho:', err);
-    }
 
     try {
       // PRIORIDAD 2: Intentar obtener email y crm_id desde URL (si se pasa como parámetro)
@@ -839,20 +757,9 @@ function PolizasSection() {
         }
       }
       
-      console.log('🔵 PolizasSection: URL params:', {
-        email: email,
-        crm_id: crmId,
-        allParams: Object.fromEntries(urlParams.entries()),
-        fullURL: window.location.href,
-        hash: window.location.hash,
-        search: window.location.search
-      });
-      
-      // DEBUG: Verificar si hay variables de Zoho Creator en el hash o URL
-      console.log('🔍 PolizasSection: Analizando hash y URL para variables de Zoho:', {
-        hash: window.location.hash,
-        search: window.location.search,
-        pathname: window.location.pathname
+      console.log('🔵 PolizasSection: Parámetros de URL detectados:', {
+        email: email || 'no disponible',
+        crm_id: crmId || 'no disponible'
       });
 
       // PRIORIDAD 2A: Si hay crm_id en la URL, usarlo inmediatamente (más confiable que email)
@@ -1124,8 +1031,8 @@ function PolizasSection() {
             </p>
           </div>
 
-          {/* Mostrar input DNI solo si no hay email o si el usuario quiere buscar manualmente */}
-          {(!emailUsuario || polizasData.length === 0) && (
+          {/* Mostrar input DNI siempre, excepto si hay pólizas cargadas y emailUsuario */}
+          {(!emailUsuario || polizasData.length === 0 || !dniObtenidoDesdeCrmId) && (
             <div className="controls">
               <input
                 id="dni"
@@ -1134,7 +1041,7 @@ function PolizasSection() {
                 value={dni}
                 onChange={(e) => setDni(e.target.value)}
                 onKeyPress={handleKeyPress}
-                disabled={loading}
+                disabled={loading || dniObtenidoDesdeCrmId} // Deshabilitar si el DNI vino de crm_id
               />
 
               <button
