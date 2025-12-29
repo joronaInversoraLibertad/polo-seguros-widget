@@ -540,18 +540,16 @@ function PolizasSection() {
 
         if (response.status === 404) {
           if (errorData && errorData.error === 'CONTACTO_NO_ENCONTRADO') {
-            // Redirigir a Perfil del Asegurado solo si realmente no existe el contacto
-            console.log('🔵 PolizasSection: Contacto no encontrado, redirigiendo...');
-            try {
-              if (window.top && window.top !== window) {
-                window.top.location.href = 'https://polobroker.zohocreatorportal.com/#Perfil_usuario';
-              } else {
-                window.location.href = 'https://polobroker.zohocreatorportal.com/#Perfil_usuario';
-              }
-            } catch (e) {
-              console.error('❌ PolizasSection: Error al redirigir:', e);
-              setError('No se encontró tu contacto. Por favor, completa tu perfil primero.');
-            }
+            // NO redirigir automáticamente - mostrar mensaje y permitir búsqueda manual
+            console.warn('⚠️ PolizasSection: Contacto no encontrado en Supabase para crm_id:', crmId);
+            console.log('🔵 PolizasSection: Mostrando input DNI para búsqueda manual');
+            setError('No se encontró tu contacto en el sistema. Por favor, ingresa tu DNI manualmente para buscar tus pólizas.');
+            setDni('');
+            setDniObtenidoDesdeCrmId(false);
+            setPolizasData([]);
+            setPolizasFiltered([]);
+            setNoResults(false);
+            setLoading(false);
             return;
           }
         }
