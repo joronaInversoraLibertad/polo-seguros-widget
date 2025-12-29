@@ -633,6 +633,104 @@ function PolizasSection() {
     }
   };
 
+  // Función para buscar pólizas por email (alternativa cuando no hay crm_id)
+  const buscarPolizasPorEmail = async (email) => {
+    console.log('🔵 PolizasSection: buscarPolizasPorEmail llamado con email:', email);
+    setLoading(true);
+    setError(null);
+    setPolizasData([]);
+    setPolizasFiltered([]);
+    setResultado('');
+    setNoResults(false);
+
+    try {
+      const url = `${API_BASE}/polizas-buscar-por-email?email=${encodeURIComponent(email)}`;
+      console.log('🔵 PolizasSection: Haciendo fetch a:', url);
+
+      const response = await fetch(url, {
+        headers: {
+          'apikey': API_KEY,
+          'Authorization': `Bearer ${API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('🔵 PolizasSection: Response status:', response.status);
+
+      if (!response.ok) {
+        let errorData = null;
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          // No se pudo parsear el error
+        }
+
+        if (response.status === 404) {
+          console.warn('⚠️ PolizasSection: Usuario/contacto no encontrado con email:', email);
+          setError('No se encontraron pólizas. Por favor, ingresa tu DNI manualmente.');
+          setDni('');
+          setDniObtenidoDesdeCrmId(false);
+          setLoading(false);
+          return;
+        }
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('🔵 PolizasSection: Response data:', data);
+
+      if (!data.success || !data.data) {
+        throw new Error('Respuesta inesperada del backend');
+      }
+
+      // Actualizar el estado del DNI si está disponible
+      if (data.data.usuario && data.data.usuario.dni) {
+        const dniObtenido = data.data.usuario.dni.toString().trim();
+        console.log('🔵 PolizasSection: DNI obtenido de Supabase:', dniObtenido);
+        setDni(dniObtenido);
+        setDniObtenidoDesdeCrmId(true);
+      }
+
+      // Procesar pólizas
+      const polizasArray = (data.data.polizas || []).map(p => {
+        const companyKey = (p.companyName || '').toLowerCase().replace(/\s+/g, '');
+        const companyUrlMap = {
+          'mercantilandina': 'mercantil',
+          'provinciaseguros': 'provincia',
+          'sancorseguros': 'sancor',
+          'experta': 'experta'
+        };
+        const aseguradoraKey = companyUrlMap[companyKey] || companyKey;
+
+        return {
+          numero: p.numeroPoliza,
+          numeroConMetadata: p.numeroPoliza,
+          aseguradora: aseguradoraKey,
+          aseguradoraNombre: p.companyName,
+          tipo: p.tipo || '-',
+          descripcion: p.descripcion || '-',
+          cobertura: p.cobertura || null,
+          vigenciaDesde: p.vigencia?.fechaInicio || '-',
+          vigenciaHasta: p.vigencia?.fechaFin || '-',
+          certificateNumber: p.metadata?.certificateNumber || null,
+          bien: p.metadata?.bien || null,
+          estado: p.vigencia?.vigente ? 'vigente' : 'vencida'
+        };
+      });
+
+      setPolizasData(polizasArray);
+      if (polizasArray.length === 0) {
+        setNoResults(true);
+      }
+
+    } catch (err) {
+      console.error('❌ PolizasSection: Error al buscar pólizas por email:', err);
+      setError('Error al cargar las pólizas. Por favor, ingresa tu DNI manualmente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Función auxiliar para intentar leer Email desde el formulario de Zoho Creator
   const obtenerEmailDesdeCreator = () => {
     try {
@@ -789,11 +887,18 @@ function PolizasSection() {
         }
       }
 
-      // NOTA: La búsqueda por email NO funciona en Zoho Creator, por lo que se omite
-      // Si no hay crm_id, mostrar input manual para ingresar DNI
+      // PRIORIDAD 2B: Si hay email en la URL pero no crm_id, buscar por email
+      if (email && !crmIdObtenido && !crmId) {
+        console.log('🔵 PolizasSection: ✅ Email encontrado en URL:', email);
+        console.log('🔵 PolizasSection: Iniciando búsqueda de pólizas por email...');
+        buscarPolizasPorEmail(email);
+        return; // Salir temprano, ya estamos consultando por email
+      }
+
+      // Si no hay crm_id ni email, mostrar input manual para ingresar DNI
       setTimeout(() => {
-        if (!crmIdObtenido && !crmId) {
-          console.log('🔵 PolizasSection: No hay crm_id disponible, mostrando input DNI para búsqueda manual');
+        if (!crmIdObtenido && !crmId && !email) {
+          console.log('🔵 PolizasSection: No hay crm_id ni email disponible, mostrando input DNI para búsqueda manual');
         }
       }, 2000); // Esperar 2 segundos por si llega el crm_id via postMessage
 
