@@ -41,24 +41,20 @@ function AccesoCard({ href, icon, title, text, ctaText, onClick }) {
 
 // Componente de Sección de Escritorio
 const navegarASeccion = (seccion) => {
-  console.log('🟢 navegarASeccion: Sección solicitada:', seccion);
   
   // Si la sección es "polizas", redirigir directamente a la página de Polizas en Zoho Creator
   if (seccion === 'polizas') {
-    console.log('🟢 navegarASeccion: Redirigiendo a página de Polizas en Zoho Creator');
     const targetUrl = 'https://polobroker.zohocreatorportal.com/#Page:Polizas';
     
     // Redirigir directamente a la página de Polizas en Zoho Creator
     if (window.parent && window.parent !== window) {
       try {
-        console.log('🟢 navegarASeccion: Intentando redirigir via window.parent');
         window.parent.location.href = targetUrl;
         return;
       } catch (e) {
         console.warn('⚠️ navegarASeccion: No se pudo redirigir via parent:', e);
         // Fallback: intentar con window.top
         try {
-          console.log('🟢 navegarASeccion: Intentando redirigir via window.top');
           window.top.location.href = targetUrl;
           return;
         } catch (e2) {
@@ -66,8 +62,6 @@ const navegarASeccion = (seccion) => {
         }
       }
     } else {
-      // Si no hay parent, redirigir directamente
-      console.log('🟢 navegarASeccion: No hay parent, redirigiendo directamente');
       window.location.href = targetUrl;
       return;
     }
@@ -397,7 +391,6 @@ function SiniestrosSection() {
 
 // Componente de Sección de Pólizas (código actual refactorizado)
 function PolizasSection() {
-  console.log('🔵 PolizasSection: Componente montado');
 
   const [dni, setDni] = useState('');
   const [loading, setLoading] = useState(false);
@@ -506,7 +499,6 @@ function PolizasSection() {
 
   // Función para buscar pólizas por crm_id (ID de Contacto de Zoho CRM)
   const buscarPolizasPorCrmId = async (crmId) => {
-    console.log('🔵 PolizasSection: buscarPolizasPorCrmId llamado con crm_id:', crmId);
     setLoading(true);
     setError(null);
     setPolizasData([]);
@@ -516,7 +508,6 @@ function PolizasSection() {
 
     try {
       const url = `${API_BASE}/polizas-buscar-por-crm-id?crm_id=${encodeURIComponent(crmId)}`;
-      console.log('🔵 PolizasSection: Haciendo fetch a:', url);
 
       const response = await fetch(url, {
         headers: {
@@ -526,8 +517,6 @@ function PolizasSection() {
         }
       });
 
-      console.log('🔵 PolizasSection: Response status:', response.status);
-      console.log('🔵 PolizasSection: Response ok:', response.ok);
 
       if (!response.ok) {
         let errorData = null;
@@ -542,7 +531,6 @@ function PolizasSection() {
           if (errorData && errorData.error === 'CONTACTO_NO_ENCONTRADO') {
             // NO redirigir automáticamente - mostrar mensaje y permitir búsqueda manual
             console.warn('⚠️ PolizasSection: Contacto no encontrado en Supabase para crm_id:', crmId);
-            console.log('🔵 PolizasSection: Mostrando input DNI para búsqueda manual');
             setError('No se encontró tu contacto en el sistema. Por favor, ingresa tu DNI manualmente para buscar tus pólizas.');
             setDni('');
             setDniObtenidoDesdeCrmId(false);
@@ -557,7 +545,6 @@ function PolizasSection() {
       }
 
       const data = await response.json();
-      console.log('🔵 PolizasSection: Response data:', data);
 
       // Si el contacto existe pero no tiene DNI, permitir búsqueda manual
       if (data.contacto_sin_dni) {
@@ -578,7 +565,6 @@ function PolizasSection() {
       // Actualizar el estado del DNI si está disponible en la respuesta
       if (data.data.contacto && data.data.contacto.dni) {
         const dniObtenido = data.data.contacto.dni.toString().trim();
-        console.log('🔵 PolizasSection: DNI obtenido de Supabase:', dniObtenido);
         setDni(dniObtenido);
         setDniObtenidoDesdeCrmId(true); // Marcar que el DNI vino de crm_id (no editable)
       }
@@ -633,9 +619,9 @@ function PolizasSection() {
     }
   };
 
+
   // Función para buscar pólizas por email (alternativa cuando no hay crm_id)
   const buscarPolizasPorEmail = async (email) => {
-    console.log('🔵 PolizasSection: buscarPolizasPorEmail llamado con email:', email);
     setLoading(true);
     setError(null);
     setPolizasData([]);
@@ -645,7 +631,6 @@ function PolizasSection() {
 
     try {
       const url = `${API_BASE}/polizas-buscar-por-email?email=${encodeURIComponent(email)}`;
-      console.log('🔵 PolizasSection: Haciendo fetch a:', url);
 
       const response = await fetch(url, {
         headers: {
@@ -655,7 +640,6 @@ function PolizasSection() {
         }
       });
 
-      console.log('🔵 PolizasSection: Response status:', response.status);
 
       if (!response.ok) {
         let errorData = null;
@@ -677,7 +661,6 @@ function PolizasSection() {
       }
 
       const data = await response.json();
-      console.log('🔵 PolizasSection: Response data:', data);
 
       if (!data.success || !data.data) {
         throw new Error('Respuesta inesperada del backend');
@@ -686,7 +669,6 @@ function PolizasSection() {
       // Actualizar el estado del DNI si está disponible
       if (data.data.usuario && data.data.usuario.dni) {
         const dniObtenido = data.data.usuario.dni.toString().trim();
-        console.log('🔵 PolizasSection: DNI obtenido de Supabase:', dniObtenido);
         setDni(dniObtenido);
         setDniObtenidoDesdeCrmId(true);
       }
@@ -761,7 +743,6 @@ function PolizasSection() {
                 const emailValue = campoEmail.value.trim();
                 // Validar que sea un email válido
                 if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
-                  console.log('🔵 PolizasSection: Email encontrado en formulario Creator:', emailValue);
                   return emailValue;
                 }
               }
@@ -775,14 +756,12 @@ function PolizasSection() {
           for (const input of todosLosInputsEmail) {
             const value = input.value ? input.value.trim() : '';
             if (value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-              console.log('🔵 PolizasSection: Email encontrado en formulario Creator (input type="email"):', value);
               return value;
             }
           }
         } catch (parentError) {
           // En iframes con diferentes dominios, no podemos acceder al DOM del parent
           // Esto es normal y esperado por políticas de seguridad del navegador
-          console.log('🔵 PolizasSection: No se puede acceder al parent document (cross-origin iframe)');
         }
       }
     } catch (err) {
@@ -793,7 +772,6 @@ function PolizasSection() {
 
   // Obtener crm_id del usuario para consultar Supabase directamente (obtiene DNI y pólizas)
   useEffect(() => {
-    console.log('🔵 PolizasSection: useEffect ejecutado');
 
     let crmIdObtenido = false;
 
@@ -802,7 +780,6 @@ function PolizasSection() {
       // Intentar obtener crm_id si está disponible
       if (event.data && (event.data.crm_id || event.data.id || event.data.CRM_ID)) {
         const crmId = event.data.crm_id || event.data.id || event.data.CRM_ID;
-        console.log('✅ PolizasSection: CRM_ID recibido via postMessage:', crmId);
         // Buscar pólizas por crm_id inmediatamente
         buscarPolizasPorCrmId(crmId);
         return;
@@ -810,7 +787,6 @@ function PolizasSection() {
     };
 
     window.addEventListener('message', messageHandler);
-    console.log('🔵 PolizasSection: ✅ Listener de postMessage configurado');
 
     try {
       // PRIORIDAD 2: Intentar obtener email y crm_id desde URL (si se pasa como parámetro)
@@ -835,7 +811,6 @@ function PolizasSection() {
           // Si el hash es una variable de Zoho Creator sin resolver
           if (hash.includes('#Page_Parameter') || hash.includes('#Contactos')) {
             console.warn('⚠️ PolizasSection: CRM_ID está en el hash como variable sin resolver:', hash);
-            console.log('🔵 PolizasSection: Zoho Creator no resolvió la variable, mostrando input DNI');
             // No intentar extraer, es una variable sin resolver
             crmId = null;
           } else {
@@ -843,20 +818,11 @@ function PolizasSection() {
             const hashMatch = hash.match(/crm_id[=:]([^&#]+)/i);
             if (hashMatch && hashMatch[1]) {
               crmId = decodeURIComponent(hashMatch[1]);
-              console.log('🔵 PolizasSection: CRM_ID extraído del hash:', crmId);
             }
           }
         }
-        
-        if (crmId) {
-          console.log('🔵 PolizasSection: CRM_ID extraído manualmente de URL:', crmId);
-        }
       }
       
-      console.log('🔵 PolizasSection: Parámetros de URL detectados:', {
-        email: email || 'no disponible',
-        crm_id: crmId || 'no disponible'
-      });
 
       // PRIORIDAD 2A: Si hay crm_id en la URL, usarlo inmediatamente (más confiable que email)
       if (crmId && !crmIdObtenido) {
@@ -870,14 +836,11 @@ function PolizasSection() {
         
         if (esVariableSinResolver) {
           console.warn('⚠️ PolizasSection: CRM_ID es una variable de Zoho Creator sin resolver:', crmId);
-          console.log('🔵 PolizasSection: Esperando a que Zoho Creator resuelva la variable o mostrando input DNI');
           // No hacer nada, mostrar input DNI
         } else {
           // Validar que crm_id sea un número válido
           const crmIdNum = parseInt(crmId, 10);
           if (!isNaN(crmIdNum) && crmIdNum > 0) {
-            console.log('🔵 PolizasSection: ✅ CRM_ID válido encontrado en URL:', crmIdNum);
-            console.log('🔵 PolizasSection: Iniciando búsqueda de pólizas por crm_id...');
             crmIdObtenido = true;
             buscarPolizasPorCrmId(crmIdNum);
             return; // Salir temprano, ya estamos consultando por crm_id
@@ -889,8 +852,6 @@ function PolizasSection() {
 
       // PRIORIDAD 2B: Si hay email en la URL pero no crm_id, buscar por email
       if (email && !crmIdObtenido && !crmId) {
-        console.log('🔵 PolizasSection: ✅ Email encontrado en URL:', email);
-        console.log('🔵 PolizasSection: Iniciando búsqueda de pólizas por email...');
         buscarPolizasPorEmail(email);
         return; // Salir temprano, ya estamos consultando por email
       }
@@ -898,7 +859,6 @@ function PolizasSection() {
       // Si no hay crm_id ni email, mostrar input manual para ingresar DNI
       setTimeout(() => {
         if (!crmIdObtenido && !crmId && !email) {
-          console.log('🔵 PolizasSection: No hay crm_id ni email disponible, mostrando input DNI para búsqueda manual');
         }
       }, 2000); // Esperar 2 segundos por si llega el crm_id via postMessage
 
@@ -1318,59 +1278,43 @@ function PolizasSection() {
 
 // Componente principal App
 function App() {
-  console.log('🟢 App: Componente montado');
 
   // Detectar sección desde query parameters
   const urlParams = new URLSearchParams(window.location.search);
   let section = urlParams.get('section');
 
-  console.log('🟢 App: section desde URL params:', section);
-
   // Si no hay parámetro section, intentar detectar desde el hash del parent (Zoho Creator)
   if (!section) {
-    console.log('🟢 App: No hay section en URL params, intentando detectar desde parent...');
 
     // Si estamos en un iframe, intentar detectar desde el hash del parent
     try {
       if (window.parent && window.parent !== window) {
         const parentHash = window.parent.location.hash;
         const parentURL = window.parent.location.href;
-        console.log('🟢 App: Parent URL:', parentURL);
-        console.log('🟢 App: Parent hash:', parentHash);
+
 
         // Detectar sección desde el hash del parent (Zoho Creator usa #Page:NombrePagina)
         if (parentHash && (parentHash.includes('Polizas') || parentHash.includes('Page:Polizas'))) {
           section = 'polizas';
-          console.log('🟢 App: ✅ Sección detectada desde parent: POLIZAS');
         } else if (parentHash && (parentHash.includes('Siniestro') || parentHash.includes('Page:Siniestro'))) {
           section = 'siniestros';
-          console.log('🟢 App: ✅ Sección detectada desde parent: SINIESTROS');
         } else if (parentHash && (parentHash.includes('Escritorio') || parentHash.includes('Page:Escritorio'))) {
           section = 'escritorio';
-          console.log('🟢 App: ✅ Sección detectada desde parent: ESCRITORIO');
-        } else {
-          console.log('🟢 App: ⚠️ No se pudo detectar sección desde parent hash');
         }
       }
     } catch (e) {
-      console.log('🟢 App: ⚠️ No se puede acceder al parent (normal en iframes con diferentes dominios):', e.message);
-      console.log('🟢 App: Error completo:', e);
+      // Ignorar errores al acceder a parent.location (por CORS)
     }
 
     // Si aún no hay sección, usar 'escritorio' por defecto (NO forzar polizas)
     if (!section) {
       section = 'escritorio'; // Por defecto: escritorio
-      console.log('🟢 App: ✅ Usando sección por defecto: ESCRITORIO (sin parámetros)');
     }
   }
 
-  console.log('🟢 App: ✅ Sección FINAL detectada:', section);
-  console.log('🟢 App: URL completa:', window.location.href);
-  console.log('🟢 App: Todos los parámetros:', Object.fromEntries(urlParams.entries()));
 
   // Renderizar según la sección
   if (section === 'polizas') {
-    console.log('🟢 App: ✅✅✅ RENDERIZANDO PolizasSection ✅✅✅');
     return <PolizasSection />;
   }
 
