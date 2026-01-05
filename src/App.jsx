@@ -810,7 +810,7 @@ function PolizasSection() {
           const hash = window.location.hash;
           // Si el hash es una variable de Zoho Creator sin resolver
           if (hash.includes('#Page_Parameter') || hash.includes('#Contactos')) {
-            console.warn('⚠️ PolizasSection: CRM_ID está en el hash como variable sin resolver:', hash);
+            // console.warn('⚠️ PolizasSection: CRM_ID está en el hash como variable sin resolver:', hash);
             // No intentar extraer, es una variable sin resolver
             crmId = null;
           } else {
@@ -835,7 +835,7 @@ function PolizasSection() {
                                       (crmId.includes('#') && crmId.includes('_'));
         
         if (esVariableSinResolver) {
-          console.warn('⚠️ PolizasSection: CRM_ID es una variable de Zoho Creator sin resolver:', crmId);
+          // console.warn('⚠️ PolizasSection: CRM_ID es una variable de Zoho Creator sin resolver:', crmId);
           // No hacer nada, mostrar input DNI
         } else {
           // Validar que crm_id sea un número válido
